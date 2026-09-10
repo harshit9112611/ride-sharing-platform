@@ -1,16 +1,23 @@
-export const LOCATIONS = [
-  'College Gate',
-  'Main Campus',
-  'Hostel Block A',
-  'Hostel Block B',
-  'Library',
-  'Sports Complex',
-  'City Mall',
-  'Railway Station',
-  'Bus Stand',
-  'Airport',
-  'Downtown',
-  'Tech Park',
+export const PICKUP_LOCATIONS = [
+  'Main Campus Gate',
+  'Excellence Gate',
+];
+
+export const DESTINATION_LOCATIONS = [
+  'Anand Nagar',
+  'Patel Nagar',
+  'Indrapuri',
+  'Sonagiri',
+  'Ayodhya Nagar',
+  'Piplani',
+  'ISBT',
+  'MP Nagar',
+  'Awadhpuri',
+  '11 Mile',
+  'Indus Town',
+  'Arera Colony',
+  'Minal Residency',
+  'Kamlapati Railway Station',
 ];
 
 export const BRANCHES = [

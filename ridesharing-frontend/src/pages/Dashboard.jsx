@@ -36,13 +36,9 @@ export default function Dashboard() {
     <div className="page-container">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-medium text-text-muted">{getRelativeGreeting()}</p>
-          <h1 className="mt-1 font-display text-2xl font-bold text-text-primary sm:text-3xl">
-            {user?.fullName?.split(' ')[0] || 'Student'}
+          <h1 className="font-display text-2xl font-bold text-text-primary sm:text-3xl">
+            Hi, {user?.fullName?.split(' ')[0] || 'Student'} 👋
           </h1>
-          <p className="mt-2 max-w-md text-sm text-text-secondary">
-            Buses leave at 3:30 PM and 5:30 PM. Share or find rides for everything in between.
-          </p>
         </div>
         <div className="flex gap-3">
           <Link to="/rides/create" className="btn-accent">

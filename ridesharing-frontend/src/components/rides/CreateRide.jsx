@@ -4,7 +4,7 @@ import { MapPin, Calendar, Clock, Users, PlusCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ridesApi } from '../../services/auth';
 import { validateRideForm } from '../../utils/validation';
-import { LOCATIONS, RIDE_TYPES, GENDER_PREFERENCES } from '../../utils/constants';
+import { PICKUP_LOCATIONS, DESTINATION_LOCATIONS, RIDE_TYPES, GENDER_PREFERENCES } from '../../utils/constants';
 import { toInputDate } from '../../utils/formatDate';
 import LoadingSpinner from '../common/LoadingSpinner';
 
@@ -83,7 +83,7 @@ export default function CreateRide() {
                 </label>
                 <select id="sourceLocation" name="sourceLocation" value={form.sourceLocation} onChange={handleChange} className="input-field">
                   <option value="">Select pickup</option>
-                  {LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
+                  {PICKUP_LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
                 </select>
                 {errors.sourceLocation && <p className="mt-1 text-xs text-error">{errors.sourceLocation}</p>}
               </div>
@@ -93,7 +93,7 @@ export default function CreateRide() {
                 </label>
                 <select id="destinationLocation" name="destinationLocation" value={form.destinationLocation} onChange={handleChange} className="input-field">
                   <option value="">Select destination</option>
-                  {LOCATIONS.filter((l) => l !== form.sourceLocation).map((loc) => (
+                  {DESTINATION_LOCATIONS.map((loc) => (
                     <option key={loc} value={loc}>{loc}</option>
                   ))}
                 </select>

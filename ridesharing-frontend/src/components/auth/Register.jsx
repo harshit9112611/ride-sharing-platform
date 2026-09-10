@@ -73,7 +73,7 @@ export default function Register() {
             <Car className="h-4.5 w-4.5 text-white" />
           </div>
           <span className="font-display text-lg font-bold">
-            Ride<span className="text-accent">Share</span>
+            LNCT<span className="text-accent">Shares</span>
           </span>
         </Link>
 
@@ -171,7 +171,7 @@ export default function Register() {
               onChange={handleChange}
               className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
             />
-            <span>I agree to the RideShare terms of service and campus ride-sharing guidelines</span>
+            <span>I agree to the LNCTShares terms of service and campus ride-sharing guidelines</span>
           </label>
           {errors.acceptTerms && <p className="text-xs text-error">{errors.acceptTerms}</p>}
 

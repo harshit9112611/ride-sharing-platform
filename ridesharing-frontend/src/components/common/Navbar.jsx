@@ -45,7 +45,7 @@ export default function Navbar() {
             <Car className="h-4.5 w-4.5 text-white" strokeWidth={2} />
           </div>
           <span className="font-display text-lg font-bold tracking-heading">
-            Ride<span className="text-accent">Share</span>
+            LNCT<span className="text-accent">Shares</span>
           </span>
         </Link>
 

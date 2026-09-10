@@ -30,6 +30,8 @@ public class RideRequestDTO {
 
     private Double price = 0.0;
 
+    private Long vehicleId;
+
     public RideRequestDTO() {
     }
 
@@ -87,5 +89,13 @@ public class RideRequestDTO {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Long getVehicleId() {
+        return vehicleId;
+    }
+
+    public void setVehicleId(Long vehicleId) {
+        this.vehicleId = vehicleId;
     }
 }

@@ -6,17 +6,17 @@ export default function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-5 py-8 sm:flex-row sm:items-center sm:px-8">
         <div>
           <p className="font-display text-sm font-semibold text-text-primary">
-            Ride<span className="text-accent">Share</span>
+            LNCT<span className="text-accent">Shares</span>
           </p>
           <p className="mt-1 text-xs text-text-muted">
-            Campus ride-sharing between bus schedules
+            Campus ride-sharing platform
           </p>
         </div>
         <div className="flex gap-6 text-xs text-text-muted">
           <Link to="/rides/search" className="transition-colors hover:text-text-secondary">
             Find Rides
           </Link>
-          <span>© {new Date().getFullYear()} RideShare</span>
+          <span>© {new Date().getFullYear()} LNCTShares</span>
         </div>
       </div>
     </footer>

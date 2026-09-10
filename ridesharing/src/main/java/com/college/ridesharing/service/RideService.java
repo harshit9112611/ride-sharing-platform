@@ -4,8 +4,10 @@ import com.college.ridesharing.dto.RideRequestDTO;
 import com.college.ridesharing.model.Ride;
 import com.college.ridesharing.model.Ride.RideStatus;
 import com.college.ridesharing.model.User;
+import com.college.ridesharing.model.Vehicle;
 import com.college.ridesharing.repository.RideRepository;
 import com.college.ridesharing.repository.UserRepository;
+import com.college.ridesharing.repository.VehicleRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,14 +20,17 @@ public class RideService {
 
     private final RideRepository rideRepository;
     private final UserRepository userRepository;
+    private final VehicleRepository vehicleRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     public RideService(
             RideRepository rideRepository,
             UserRepository userRepository,
+            VehicleRepository vehicleRepository,
             SimpMessagingTemplate messagingTemplate) {
         this.rideRepository = rideRepository;
         this.userRepository = userRepository;
+        this.vehicleRepository = vehicleRepository;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -45,6 +50,15 @@ public class RideService {
         ride.setPrice(request.getRideType() == Ride.RideType.FREE ? 0.0 : request.getPrice());
         ride.setStatus(RideStatus.OPEN);
         ride.setCreatedAt(LocalDateTime.now());
+
+        if (request.getVehicleId() != null) {
+            Vehicle vehicle = vehicleRepository.findById(request.getVehicleId())
+                    .orElseThrow(() -> new IllegalArgumentException("Selected vehicle not found"));
+            if (!vehicle.getOwner().getId().equals(driver.getId())) {
+                throw new IllegalArgumentException("Vehicle does not belong to driver");
+            }
+            ride.setVehicle(vehicle);
+        }
 
         Ride savedRide = rideRepository.save(ride);
         messagingTemplate.convertAndSend("/topic/rides/new", savedRide);

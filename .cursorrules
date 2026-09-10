@@ -1,0 +1,46 @@
+# LNCTShares Project Rules — READ EVERY TIME
+
+## CRITICAL: DO NOT BREAK EXISTING CODE
+- This is a WORKING project. Never rewrite whole files unless asked.
+- Always make MINIMAL changes — surgical edits only.
+- Before editing any file, ASK: "Do you want me to modify X?"
+- Show diffs before applying. Wait for approval on multi-file changes.
+- If unsure, ASK FIRST. Never assume.
+
+## TECH STACK (FIXED — DO NOT CHANGE)
+- Backend: Spring Boot 3.2.5, Java 17, Maven
+- Frontend: React 18, Vite, Tailwind CSS
+- Database: H2 file-based at ./data/ridesharingdb
+- Auth: JWT (already working — do not modify security flow)
+- WebSocket: STOMP over SockJS at /ws
+
+## STRICT CODE RULES
+- NO Lombok — write manual getters/setters
+- Constructor injection only (NO @Autowired on fields)
+- jakarta.* imports only (NOT javax.*)
+- No snapshot versions in pom.xml
+- Follow existing file structure exactly
+
+## PROJECT STRUCTURE (NEVER CHANGE)
+- Backend lives in: ridesharing/
+- Frontend lives in: ridesharing-frontend/
+- Do NOT put Java files in ridesharing-frontend/
+- Do NOT put React files in ridesharing/
+
+## BRANDING
+- App name: LNCTShares
+- Pickup locations (ONLY 2): Main Campus Gate, Excellence Gate
+- Destination locations (15): Anand Nagar, Patel Nagar, Indrapuri, Sonagiri, Ayodhya Nagar, Piplani, ISBT, MP Nagar, Awadhpuri, 11 Mile, Indus Town, Arera Colony, Minal Residency, Kamlapati Railway Station
+
+## WORKFLOW RULES
+1. Read files before editing.
+2. Confirm plan before writing code.
+3. One feature at a time. Verify with mvn compile after backend changes.
+4. Never delete files without explicit permission.
+5. Never touch: target/, node_modules/, .git/, data/
+
+## WHEN I ASK FOR A FEATURE
+- First: list which files you'll touch
+- Second: wait for my "go ahead"
+- Third: make the change
+- Fourth: tell me how to test it

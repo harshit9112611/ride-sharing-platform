@@ -13,3 +13,9 @@ export const ridesApi = {
   getMyRides: () => api.get('/api/rides/my'),
   getById: (id) => api.get(`/api/rides/${id}`),
 };
+
+export const bookingsApi = {
+  book: (rideId, seatsBooked) => api.post(`/api/rides/${rideId}/book`, { seatsBooked }),
+  cancel: (bookingId) => api.delete(`/api/bookings/${bookingId}`),
+  getMyBookings: () => api.get('/api/bookings/my'),
+};

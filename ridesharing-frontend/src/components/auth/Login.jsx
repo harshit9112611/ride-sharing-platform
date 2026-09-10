@@ -45,15 +45,15 @@ export default function Login() {
             <Car className="h-5 w-5 text-white" />
           </div>
           <span className="font-display text-xl font-bold text-white">
-            Ride<span className="text-blue-400">Share</span>
+            LNCT<span className="text-blue-400">Shares</span>
           </span>
         </div>
         <div className="max-w-sm">
           <h1 className="font-display text-3xl font-bold leading-tight text-white">
-            Share rides between bus schedules
+            Campus Ride-Sharing Platform
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-slate-400">
-            College buses run at 3:30 PM and 5:30 PM. Fill the gap with trusted peer rides from your campus community.
+            Connect with peers and share rides across campus conveniently and safely.
           </p>
         </div>
         <p className="text-xs text-slate-500">Trusted by students across campus</p>
@@ -67,7 +67,7 @@ export default function Login() {
                 <Car className="h-4.5 w-4.5 text-white" />
               </div>
               <span className="font-display text-lg font-bold">
-                Ride<span className="text-accent">Share</span>
+                LNCT<span className="text-accent">Shares</span>
               </span>
             </div>
           </div>

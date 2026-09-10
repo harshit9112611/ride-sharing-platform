@@ -4,3 +4,7 @@
 .DS_Store
 *.log
 .env.local
+
+# H2 database file (runtime data)
+ridesharing/data/
+

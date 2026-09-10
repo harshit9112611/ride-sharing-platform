@@ -3,7 +3,7 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ridesApi } from '../../services/auth';
 import { connectWebSocket } from '../../services/websocket';
-import { LOCATIONS, SORT_OPTIONS } from '../../utils/constants';
+import { PICKUP_LOCATIONS, DESTINATION_LOCATIONS, SORT_OPTIONS } from '../../utils/constants';
 import { toInputDate } from '../../utils/formatDate';
 import RideCard from './RideCard';
 import EmptyState from '../common/EmptyState';
@@ -85,7 +85,7 @@ export default function SearchRides() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-text-primary sm:text-3xl">Find a Ride</h1>
-          <p className="mt-1 text-sm text-text-secondary">Search available rides between bus schedules</p>
+          <p className="mt-1 text-sm text-text-secondary">Search available rides</p>
         </div>
       </div>
 
@@ -95,14 +95,14 @@ export default function SearchRides() {
             <label htmlFor="source" className="mb-1.5 block text-xs font-medium text-text-muted">From</label>
             <select id="source" value={filters.source} onChange={(e) => setFilters({ ...filters, source: e.target.value })} className="input-field">
               <option value="">Select source</option>
-              {LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
+              {PICKUP_LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
             </select>
           </div>
           <div>
             <label htmlFor="destination" className="mb-1.5 block text-xs font-medium text-text-muted">To</label>
             <select id="destination" value={filters.destination} onChange={(e) => setFilters({ ...filters, destination: e.target.value })} className="input-field">
               <option value="">Select destination</option>
-              {LOCATIONS.filter((l) => l !== filters.source).map((loc) => (
+              {DESTINATION_LOCATIONS.map((loc) => (
                 <option key={loc} value={loc}>{loc}</option>
               ))}
             </select>

@@ -1,22 +1,46 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Users, Star, ArrowLeft, Car } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { ridesApi } from '../../services/auth';
+import { ridesApi, bookingsApi } from '../../services/auth';
 import { formatDate, formatTime } from '../../utils/formatDate';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function RideDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [ride, setRide] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [seatsToBook, setSeatsToBook] = useState(1);
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   useEffect(() => {
+    fetchRide();
+  }, [id]);
+
+  const fetchRide = () => {
     ridesApi.getById(id)
       .then(({ data }) => setRide(data))
       .catch(() => toast.error('Ride not found'))
       .finally(() => setLoading(false));
-  }, [id]);
+  };
+
+  const handleBookRide = async () => {
+    try {
+      setBookingLoading(true);
+      await bookingsApi.book(id, seatsToBook);
+      toast.success('Ride booked successfully!');
+      setBookingModalOpen(false);
+      navigate('/my-rides');
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to book ride');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -37,9 +61,12 @@ export default function RideDetails() {
 
   const driver = ride.driver || {};
   const isFree = ride.rideType === 'FREE';
+  const isDriver = user?.id === driver.id;
+  const isFull = ride.status === 'FULL';
+  const canBook = ride.status === 'OPEN' && !isDriver;
 
   return (
-    <div className="page-container">
+    <div className="page-container relative">
       <Link to="/rides/search" className="mb-6 inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary">
         <ArrowLeft className="h-4 w-4" /> Back to search
       </Link>
@@ -103,28 +130,69 @@ export default function RideDetails() {
               </div>
               <div>
                 <p className="font-medium text-text-primary">{driver.fullName}</p>
-                <p className="text-sm text-text-secondary">{driver.branch} · Year {driver.academicYear}</p>
+                <p className="text-sm text-text-secondary">{driver.branch} • Year {driver.academicYear}</p>
                 {driver.rating > 0 && (
                   <p className="mt-1 flex items-center gap-1 text-sm text-text-secondary">
                     <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-                    {driver.rating.toFixed(1)} rating · {driver.totalRides} rides
+                    {driver.rating.toFixed(1)} rating • {driver.totalRides} rides
                   </p>
                 )}
               </div>
             </div>
 
-            {ride.status === 'OPEN' && (
-              <button
-                type="button"
-                onClick={() => toast.success('Ride request sent to driver!')}
-                className="btn-accent mt-6 w-full"
-              >
-                Request This Ride
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setBookingModalOpen(true)}
+              disabled={!canBook}
+              className={`btn-accent mt-6 w-full ${!canBook ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isDriver ? 'You are the driver' : isFull ? 'Ride is Full' : 'Book This Ride'}
+            </button>
           </div>
         </div>
       </div>
+
+      {bookingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-xl font-bold">Confirm Booking</h2>
+            <p className="mt-2 text-sm text-text-secondary">
+              How many seats would you like to book?
+            </p>
+            
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-text-primary">Seats</label>
+              <input
+                type="number"
+                min="1"
+                max={ride.availableSeats}
+                value={seatsToBook}
+                onChange={(e) => setSeatsToBook(parseInt(e.target.value) || 1)}
+                className="input-field mt-1 w-full"
+              />
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setBookingModalOpen(false)}
+                className="btn-ghost px-4 py-2"
+                disabled={bookingLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBookRide}
+                className="btn-accent px-4 py-2"
+                disabled={bookingLoading}
+              >
+                {bookingLoading ? 'Booking...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
