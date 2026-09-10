@@ -1,25 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Star, Car, Save, Plus, Trash2 } from 'lucide-react';
+import { Star, Car, Save, Plus, Trash2, Edit2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
-import { authApi } from '../services/auth';
+import { authApi, vehiclesApi } from '../services/auth';
 import { BRANCHES, ACADEMIC_YEARS } from '../utils/constants';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-
-const VEHICLES_KEY = 'rideshare_vehicles';
-
-function loadVehicles(userId) {
-  try {
-    const stored = localStorage.getItem(`${VEHICLES_KEY}_${userId}`);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveVehicles(userId, vehicles) {
-  localStorage.setItem(`${VEHICLES_KEY}_${userId}`, JSON.stringify(vehicles));
-}
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
@@ -30,8 +15,10 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [vehicles, setVehicles] = useState([]);
   const [showVehicleForm, setShowVehicleForm] = useState(false);
+  const [editingVehicleId, setEditingVehicleId] = useState(null);
+  const [savingVehicle, setSavingVehicle] = useState(false);
   const [vehicleForm, setVehicleForm] = useState({
-    vehicleType: 'Car',
+    vehicleType: 'CAR_SEDAN',
     brand: '',
     model: '',
     color: '',
@@ -39,18 +26,18 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    authApi.getProfile()
-      .then(({ data }) => {
-        setProfile(data);
+    Promise.all([authApi.getProfile(), vehiclesApi.getMy()])
+      .then(([profileRes, vehiclesRes]) => {
+        setProfile(profileRes.data);
         setForm({
-          fullName: data.fullName,
-          phoneNumber: data.phoneNumber,
-          branch: data.branch,
-          academicYear: data.academicYear,
+          fullName: profileRes.data.fullName,
+          phoneNumber: profileRes.data.phoneNumber,
+          branch: profileRes.data.branch,
+          academicYear: profileRes.data.academicYear,
         });
-        setVehicles(loadVehicles(data.id));
+        setVehicles(vehiclesRes.data);
       })
-      .catch(() => toast.error('Failed to load profile'))
+      .catch(() => toast.error('Failed to load profile data'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -69,26 +56,71 @@ export default function Profile() {
     }
   };
 
-  const handleAddVehicle = (e) => {
+  const handleAddVehicle = async (e) => {
     e.preventDefault();
     if (!vehicleForm.brand || !vehicleForm.model || !vehicleForm.vehicleNumber) {
-      toast.error('Fill all vehicle fields');
+      toast.error('Fill required vehicle fields');
       return;
     }
-    const newVehicle = { ...vehicleForm, id: Date.now(), verified: false };
-    const updated = [...vehicles, newVehicle];
-    setVehicles(updated);
-    saveVehicles(profile.id, updated);
-    setVehicleForm({ vehicleType: 'Car', brand: '', model: '', color: '', vehicleNumber: '' });
-    setShowVehicleForm(false);
-    toast.success('Vehicle added');
+    setSavingVehicle(true);
+    try {
+      const { data } = await vehiclesApi.add(vehicleForm);
+      setVehicles([...vehicles, data]);
+      cancelVehicleForm();
+      toast.success('Vehicle added');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to add vehicle');
+    } finally {
+      setSavingVehicle(false);
+    }
   };
 
-  const handleDeleteVehicle = (id) => {
-    const updated = vehicles.filter((v) => v.id !== id);
-    setVehicles(updated);
-    saveVehicles(profile.id, updated);
-    toast.success('Vehicle removed');
+  const handleUpdateVehicle = async (e) => {
+    e.preventDefault();
+    if (!vehicleForm.brand || !vehicleForm.model || !vehicleForm.vehicleNumber) {
+      toast.error('Fill required vehicle fields');
+      return;
+    }
+    setSavingVehicle(true);
+    try {
+      const { data } = await vehiclesApi.update(editingVehicleId, vehicleForm);
+      setVehicles(vehicles.map((v) => (v.id === editingVehicleId ? data : v)));
+      cancelVehicleForm();
+      toast.success('Vehicle updated');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to update vehicle');
+    } finally {
+      setSavingVehicle(false);
+    }
+  };
+
+  const handleDeleteVehicle = async (id) => {
+    if (!window.confirm('Delete this vehicle?')) return;
+    try {
+      await vehiclesApi.remove(id);
+      setVehicles(vehicles.filter((v) => v.id !== id));
+      toast.success('Vehicle removed');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to delete vehicle');
+    }
+  };
+
+  const openEditVehicle = (v) => {
+    setVehicleForm({
+      vehicleType: v.vehicleType || 'CAR_SEDAN',
+      brand: v.brand || '',
+      model: v.model || '',
+      color: v.color || '',
+      vehicleNumber: v.vehicleNumber || ''
+    });
+    setEditingVehicleId(v.id);
+    setShowVehicleForm(true);
+  };
+
+  const cancelVehicleForm = () => {
+    setVehicleForm({ vehicleType: 'CAR_SEDAN', brand: '', model: '', color: '', vehicleNumber: '' });
+    setShowVehicleForm(false);
+    setEditingVehicleId(null);
   };
 
   if (loading) {
@@ -172,18 +204,27 @@ export default function Profile() {
           <div className="card p-6 sm:p-8">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-semibold">My Vehicles</h2>
-              <button type="button" onClick={() => setShowVehicleForm(!showVehicleForm)} className="btn-ghost py-1.5 px-3 text-xs">
-                <Plus className="h-3.5 w-3.5" /> Add
+              <button type="button" onClick={() => showVehicleForm ? cancelVehicleForm() : setShowVehicleForm(true)} className="btn-ghost py-1.5 px-3 text-xs">
+                {showVehicleForm ? 'Cancel' : <><Plus className="h-3.5 w-3.5" /> Add</>}
               </button>
             </div>
 
             {showVehicleForm && (
-              <form onSubmit={handleAddVehicle} className="mt-4 grid gap-3 rounded-xl border border-border bg-background p-4 sm:grid-cols-2">
+              <form onSubmit={editingVehicleId ? handleUpdateVehicle : handleAddVehicle} className="mt-4 grid gap-3 rounded-xl border border-border bg-background p-4 sm:grid-cols-2">
+                <select value={vehicleForm.vehicleType} onChange={(e) => setVehicleForm({ ...vehicleForm, vehicleType: e.target.value })} className="input-field sm:col-span-2">
+                  <option value="BIKE">Bike</option>
+                  <option value="SCOOTY">Scooty</option>
+                  <option value="CAR_HATCHBACK">Car (Hatchback)</option>
+                  <option value="CAR_SEDAN">Car (Sedan)</option>
+                  <option value="CAR_SUV">Car (SUV)</option>
+                </select>
                 <input placeholder="Brand" value={vehicleForm.brand} onChange={(e) => setVehicleForm({ ...vehicleForm, brand: e.target.value })} className="input-field" />
                 <input placeholder="Model" value={vehicleForm.model} onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })} className="input-field" />
                 <input placeholder="Color" value={vehicleForm.color} onChange={(e) => setVehicleForm({ ...vehicleForm, color: e.target.value })} className="input-field" />
                 <input placeholder="Vehicle Number" value={vehicleForm.vehicleNumber} onChange={(e) => setVehicleForm({ ...vehicleForm, vehicleNumber: e.target.value })} className="input-field" />
-                <button type="submit" className="btn-accent sm:col-span-2">Save Vehicle</button>
+                <button type="submit" disabled={savingVehicle} className="btn-accent sm:col-span-2">
+                  {savingVehicle ? <LoadingSpinner size="sm" className="text-white" /> : (editingVehicleId ? 'Update Vehicle' : 'Save Vehicle')}
+                </button>
               </form>
             )}
 
@@ -200,9 +241,14 @@ export default function Profile() {
                         <p className="text-xs text-text-muted">{v.color} · {v.vehicleNumber}</p>
                       </div>
                     </div>
-                    <button type="button" onClick={() => handleDeleteVehicle(v.id)} className="text-text-muted hover:text-error">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => openEditVehicle(v)} className="text-text-muted hover:text-accent">
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button type="button" onClick={() => handleDeleteVehicle(v.id)} className="text-text-muted hover:text-error">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

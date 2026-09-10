@@ -19,3 +19,10 @@ export const bookingsApi = {
   cancel: (bookingId) => api.delete(`/api/bookings/${bookingId}`),
   getMyBookings: () => api.get('/api/bookings/my'),
 };
+
+export const vehiclesApi = {
+  getMy: () => api.get('/api/vehicles/my'),
+  add: (data) => api.post('/api/vehicles', data),
+  update: (id, data) => api.put(`/api/vehicles/${id}`, data),
+  remove: (id) => api.delete(`/api/vehicles/${id}`),
+};
