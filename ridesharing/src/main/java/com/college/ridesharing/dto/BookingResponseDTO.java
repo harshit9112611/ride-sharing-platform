@@ -6,6 +6,7 @@ public class BookingResponseDTO {
 
     private Long id;
     private Long rideId;
+    private Long passengerId;
     private String passengerName;
     private Integer seatsBooked;
     private String status;
@@ -34,6 +35,14 @@ public class BookingResponseDTO {
 
     public void setRideId(Long rideId) {
         this.rideId = rideId;
+    }
+
+    public Long getPassengerId() {
+        return passengerId;
+    }
+
+    public void setPassengerId(Long passengerId) {
+        this.passengerId = passengerId;
     }
 
     public String getPassengerName() {

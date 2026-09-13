@@ -112,11 +112,21 @@ public class BookingService {
         return bookings.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
+    public List<BookingResponseDTO> getReceivedRequests(Long driverId, Booking.BookingStatus status) {
+        List<Booking> bookings = bookingRepository.findByRide_Driver_IdAndStatus(driverId, status);
+        return bookings.stream()
+            .map(this::mapToDTO)
+            .collect(Collectors.toList());
+    }
+
     private BookingResponseDTO mapToDTO(Booking booking) {
         BookingResponseDTO dto = new BookingResponseDTO();
         dto.setId(booking.getId());
         dto.setRideId(booking.getRide().getId());
-        dto.setPassengerName(booking.getPassenger().getFullName());
+        if (booking.getPassenger() != null) {
+            dto.setPassengerId(booking.getPassenger().getId());
+            dto.setPassengerName(booking.getPassenger().getFullName());
+        }
         dto.setSeatsBooked(booking.getSeatsBooked());
         dto.setStatus(booking.getStatus().name());
         dto.setCreatedAt(booking.getCreatedAt());

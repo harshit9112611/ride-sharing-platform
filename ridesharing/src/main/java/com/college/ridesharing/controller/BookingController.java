@@ -15,16 +15,22 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.college.ridesharing.model.Booking;
+import com.college.ridesharing.model.User;
+import com.college.ridesharing.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api")
 public class BookingController {
 
     private final BookingService bookingService;
+    private final UserRepository userRepository;
 
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService, UserRepository userRepository) {
         this.bookingService = bookingService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/rides/{rideId}/book")
@@ -59,5 +65,20 @@ public class BookingController {
         String passengerEmail = authentication.getName();
         List<BookingResponseDTO> bookings = bookingService.getMyBookings(passengerEmail);
         return ResponseEntity.ok(bookings);
+    }
+
+    @GetMapping("/bookings/received")
+    public ResponseEntity<List<BookingResponseDTO>> getReceivedRequests(
+            @RequestParam(defaultValue = "CONFIRMED") String status,
+            Authentication authentication) {
+        User driver = userRepository.findByCollegeEmail(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        Booking.BookingStatus bookingStatus;
+        try {
+            bookingStatus = Booking.BookingStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid status. Use PENDING, CONFIRMED, or CANCELLED");
+        }
+        return ResponseEntity.ok(bookingService.getReceivedRequests(driver.getId(), bookingStatus));
     }
 }

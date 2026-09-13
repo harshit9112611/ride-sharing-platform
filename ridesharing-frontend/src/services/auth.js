@@ -18,6 +18,7 @@ export const bookingsApi = {
   book: (rideId, seatsBooked) => api.post(`/api/rides/${rideId}/book`, { seatsBooked }),
   cancel: (bookingId) => api.delete(`/api/bookings/${bookingId}`),
   getMyBookings: () => api.get('/api/bookings/my'),
+  received: (status = 'CONFIRMED') => api.get(`/api/bookings/received?status=${status}`),
 };
 
 export const vehiclesApi = {

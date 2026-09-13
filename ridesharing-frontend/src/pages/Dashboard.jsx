@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Car, Users, PlusCircle, Search, ArrowRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { ridesApi } from '../services/auth';
+import { ridesApi, bookingsApi } from '../services/auth';
 import { getRelativeGreeting } from '../utils/formatDate';
 import RideCard from '../components/rides/RideCard';
 import EmptyState from '../components/common/EmptyState';
@@ -12,12 +12,17 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [myRides, setMyRides] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [requestCount, setRequestCount] = useState(0);
 
   useEffect(() => {
     ridesApi.getMyRides()
       .then(({ data }) => setMyRides(data))
       .catch(() => setMyRides([]))
       .finally(() => setLoading(false));
+      
+    bookingsApi.received('CONFIRMED')
+      .then(r => setRequestCount(r.data?.length || 0))
+      .catch(() => setRequestCount(0));
   }, []);
 
   const openRides = myRides.filter((r) => r.status === 'OPEN');
@@ -27,7 +32,7 @@ export default function Dashboard() {
     { label: 'Total Rides', value: myRides.length, icon: Car, accent: 'text-accent' },
     { label: 'Open Rides', value: openRides.length, icon: Search, accent: 'text-success' },
     { label: 'Available Seats', value: totalSeats, icon: Users, accent: 'text-warning' },
-    { label: 'Requests', value: 0, icon: ArrowRight, accent: 'text-text-muted' },
+    { label: 'Requests', value: requestCount, icon: ArrowRight, accent: 'text-text-muted' },
   ];
 
   const recentRides = openRides.slice(0, 3);
