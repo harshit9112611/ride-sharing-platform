@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Calendar, Clock, Users, PlusCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { ridesApi } from '../../services/auth';
+import { ridesApi, vehiclesApi } from '../../services/auth';
 import { validateRideForm } from '../../utils/validation';
 import { PICKUP_LOCATIONS, DESTINATION_LOCATIONS, RIDE_TYPES, GENDER_PREFERENCES } from '../../utils/constants';
 import { toInputDate } from '../../utils/formatDate';
@@ -10,6 +10,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 
 export default function CreateRide() {
   const navigate = useNavigate();
+  const [vehicles, setVehicles] = useState([]);
   const [form, setForm] = useState({
     sourceLocation: '',
     destinationLocation: '',
@@ -19,13 +20,24 @@ export default function CreateRide() {
     rideType: 'FREE',
     price: 0,
     genderPreference: 'ANYONE',
+    vehicleId: '',
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    vehiclesApi.getMy()
+      .then(r => setVehicles(r.data || []))
+      .catch(() => setVehicles([]));
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    let newValue = value;
+    if (name === 'vehicleId') {
+      newValue = newValue === '' ? '' : Number(newValue);
+    }
+    setForm({ ...form, [name]: newValue });
     setErrors({ ...errors, [name]: '' });
   };
 
@@ -52,6 +64,7 @@ export default function CreateRide() {
         availableSeats: Number(form.availableSeats),
         rideType: form.rideType,
         price: form.rideType === 'FUEL_SHARING' ? Number(form.price) : 0,
+        vehicleId: form.vehicleId ? Number(form.vehicleId) : null,
       };
 
       await ridesApi.create(payload);
@@ -183,6 +196,39 @@ export default function CreateRide() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-navy-700 mb-1.5">
+              Vehicle (Optional)
+            </label>
+            <select
+              name="vehicleId"
+              value={form.vehicleId}
+              onChange={handleChange}
+              disabled={vehicles.length === 0}
+              className="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl
+                         focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200
+                         disabled:bg-gray-100 disabled:cursor-not-allowed"
+            >
+              {vehicles.length === 0 ? (
+                <option value="">No vehicles added</option>
+              ) : (
+                <>
+                  <option value="">— Not linked —</option>
+                  {vehicles.map(v => (
+                    <option key={v.id} value={v.id}>
+                      {v.brand} {v.model} ({v.vehicleNumber})
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+            {vehicles.length === 0 && (
+              <p className="text-xs text-gray-400 mt-1">
+                <a href="/profile" className="text-primary-600 hover:underline">Add a vehicle in Profile</a> to link it here
+              </p>
+            )}
           </div>
 
           <button type="submit" disabled={loading} className="btn-accent w-full py-3">
