@@ -13,6 +13,7 @@ import com.college.ridesharing.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,11 +23,13 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final RideRepository rideRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public BookingService(BookingRepository bookingRepository, RideRepository rideRepository, UserRepository userRepository) {
+    public BookingService(BookingRepository bookingRepository, RideRepository rideRepository, UserRepository userRepository, SimpMessagingTemplate messagingTemplate) {
         this.bookingRepository = bookingRepository;
         this.rideRepository = rideRepository;
         this.userRepository = userRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional
@@ -72,7 +75,10 @@ public class BookingService {
         
         Booking savedBooking = bookingRepository.save(booking);
 
-        return mapToDTO(savedBooking);
+        BookingResponseDTO dto = mapToDTO(savedBooking);
+        messagingTemplate.convertAndSend("/topic/driver/" + ride.getDriver().getId() + "/bookings", dto);
+        
+        return dto;
     }
 
     @Transactional
