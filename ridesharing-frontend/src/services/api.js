@@ -10,10 +10,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const remember = localStorage.getItem('rememberMe') === 'true';
-  const storage = remember ? localStorage : sessionStorage;
-  const token = storage.getItem('token') || localStorage.getItem('token');
-
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -24,12 +21,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const hadToken = localStorage.getItem('token') || sessionStorage.getItem('token');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
-
-      if (!window.location.pathname.includes('/login')) {
+      if (hadToken && !window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
     }

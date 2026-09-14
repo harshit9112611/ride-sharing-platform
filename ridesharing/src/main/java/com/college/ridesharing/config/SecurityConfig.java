@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/rides/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/rides/my").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/rides/{id:\\d+}").permitAll()
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
