@@ -7,6 +7,7 @@ import { validateRideForm } from '../../utils/validation';
 import { PICKUP_LOCATIONS, DESTINATION_LOCATIONS, RIDE_TYPES, GENDER_PREFERENCES } from '../../utils/constants';
 import { toInputDate } from '../../utils/formatDate';
 import LoadingSpinner from '../common/LoadingSpinner';
+import RideMap from './RideMap';
 
 export default function CreateRide() {
   const navigate = useNavigate();
@@ -113,6 +114,10 @@ export default function CreateRide() {
                 {errors.destinationLocation && <p className="mt-1 text-xs text-error">{errors.destinationLocation}</p>}
               </div>
             </div>
+
+            {(form.sourceLocation && form.destinationLocation) && (
+              <RideMap source={form.sourceLocation} destination={form.destinationLocation} />
+            )}
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
