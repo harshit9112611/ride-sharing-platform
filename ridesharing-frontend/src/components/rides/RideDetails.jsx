@@ -16,10 +16,22 @@ export default function RideDetails() {
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [seatsToBook, setSeatsToBook] = useState(1);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [userBooking, setUserBooking] = useState(null);
 
   useEffect(() => {
     fetchRide();
-  }, [id]);
+    if (user) fetchUserBooking();
+  }, [id, user]);
+
+  const fetchUserBooking = async () => {
+    try {
+      const { data } = await bookingsApi.getMyBookings();
+      const booking = data.find(b => b.rideId === Number(id) && b.status === 'CONFIRMED');
+      if (booking) setUserBooking(booking);
+    } catch (e) {
+      // ignore
+    }
+  };
 
   const fetchRide = () => {
     ridesApi.getById(id)
@@ -63,51 +75,52 @@ export default function RideDetails() {
   const isFree = ride.rideType === 'FREE';
   const isDriver = user?.id === driver.id;
   const isFull = ride.status === 'FULL';
-  const canBook = ride.status === 'OPEN' && !isDriver;
+  const hasBooked = !!userBooking;
+  const canBook = ride.status === 'OPEN' && !isDriver && !hasBooked;
 
   return (
-    <div className="page-container relative">
+    <div className="page-container relative space-y-4">
       <Link to="/rides/search" className="mb-6 inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary">
         <ArrowLeft className="h-4 w-4" /> Back to search
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <div className="card p-6 sm:p-8">
+          <div className={`card p-4 sm:p-6 ${hasBooked ? 'border-2 border-success shadow-success/10 bg-success/5' : ''}`}>
             <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-accent">
               <Car className="h-4 w-4" />
               Ride Details
             </div>
 
-            <h1 className="mt-4 font-display text-2xl font-bold text-text-primary sm:text-3xl">
+            <h1 className="mt-3 font-display text-xl font-bold text-text-primary sm:text-2xl">
               {ride.sourceLocation} → {ride.destinationLocation}
             </h1>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl bg-background p-4">
                 <MapPin className="h-4 w-4 text-accent" />
                 <p className="mt-2 text-xs text-text-muted">Route</p>
-                <p className="text-sm font-medium">{ride.sourceLocation}</p>
-                <p className="text-sm text-text-secondary">to {ride.destinationLocation}</p>
+                <p className="text-xs font-medium">{ride.sourceLocation}</p>
+                <p className="text-xs text-text-secondary">to {ride.destinationLocation}</p>
               </div>
               <div className="rounded-xl bg-background p-4">
                 <Clock className="h-4 w-4 text-accent" />
                 <p className="mt-2 text-xs text-text-muted">Departure</p>
-                <p className="text-sm font-medium">{formatDate(ride.departureDate)}</p>
-                <p className="text-sm text-text-secondary">{formatTime(ride.departureTime)}</p>
+                <p className="text-xs font-medium">{formatDate(ride.departureDate)}</p>
+                <p className="text-xs text-text-secondary">{formatTime(ride.departureTime)}</p>
               </div>
               <div className="rounded-xl bg-background p-4">
                 <Users className="h-4 w-4 text-accent" />
                 <p className="mt-2 text-xs text-text-muted">Availability</p>
-                <p className="text-sm font-medium">{ride.availableSeats} seats left</p>
-                <p className="text-sm text-text-secondary">{ride.status}</p>
+                <p className="text-xs font-medium">{ride.availableSeats} seats left</p>
+                <p className="text-xs text-text-secondary">{ride.status}</p>
               </div>
             </div>
 
-            <div className="mt-8 flex items-center justify-between rounded-xl border border-border p-5">
+            <div className="mt-5 flex items-center justify-between rounded-xl border border-border p-4">
               <div>
-                <p className="text-sm text-text-muted">Ride type</p>
-                <p className="font-display text-lg font-semibold">
+                <p className="text-xs text-text-muted">Ride type</p>
+                <p className="font-display text-base font-semibold">
                   {isFree ? 'Free Ride' : 'Fuel Sharing'}
                 </p>
               </div>
@@ -122,32 +135,55 @@ export default function RideDetails() {
         </div>
 
         <div className="lg:col-span-2">
-          <div className="card p-6">
-            <h2 className="font-display text-lg font-semibold">Driver</h2>
-            <div className="mt-4 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-lg font-bold text-white">
-                {driver.fullName?.charAt(0) || 'D'}
+          <div className="card p-4">
+            <h2 className="font-display text-base font-semibold">Driver & Vehicle</h2>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white">
+                  {driver.fullName?.charAt(0) || 'D'}
+                </div>
+                <div>
+                  <p className="font-medium text-sm text-text-primary">{driver.fullName}</p>
+                  <p className="text-xs text-text-secondary">{driver.branch}</p>
+                  {driver.rating > 0 && (
+                    <p className="mt-0.5 flex items-center gap-1 text-xs text-text-secondary">
+                      <Star className="h-3 w-3 fill-warning text-warning" />
+                      {driver.rating.toFixed(1)}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-text-primary">{driver.fullName}</p>
-                <p className="text-sm text-text-secondary">{driver.branch} • Year {driver.academicYear}</p>
-                {driver.rating > 0 && (
-                  <p className="mt-1 flex items-center gap-1 text-sm text-text-secondary">
-                    <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-                    {driver.rating.toFixed(1)} rating • {driver.totalRides} rides
-                  </p>
-                )}
-              </div>
+              {ride.vehicle && (
+                <div className="flex items-center gap-3 border-l border-border pl-4">
+                  <Car className="h-8 w-8 text-text-muted" />
+                  <div>
+                    <p className="font-medium text-sm text-text-primary">{ride.vehicle.model}</p>
+                    <p className="text-xs text-text-secondary">{ride.vehicle.registrationNumber}</p>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <button
-              type="button"
-              onClick={() => setBookingModalOpen(true)}
-              disabled={!canBook}
-              className={`btn-accent mt-6 w-full ${!canBook ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {isDriver ? 'You are the driver' : isFull ? 'Ride is Full' : 'Book This Ride'}
-            </button>
+            {hasBooked ? (
+              <div className="mt-5 flex flex-col items-center justify-center rounded-xl bg-success/10 p-3 text-success">
+                <span className="font-semibold text-sm">✓ You have booked this ride</span>
+                <span className="text-xs">{userBooking.seatsBooked} seat(s) booked</span>
+              </div>
+            ) : isDriver ? (
+              <button disabled className="btn-accent mt-5 w-full opacity-50 cursor-not-allowed">You are the driver</button>
+            ) : isFull ? (
+              <div className="mt-5 flex items-center justify-center rounded-xl bg-error/10 p-3 font-semibold text-error">
+                This ride is full
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setSeatsToBook(1); setBookingModalOpen(true); }}
+                className="btn-accent mt-5 w-full"
+              >
+                Book This Ride
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -167,7 +203,11 @@ export default function RideDetails() {
                 min="1"
                 max={ride.availableSeats}
                 value={seatsToBook}
-                onChange={(e) => setSeatsToBook(parseInt(e.target.value) || 1)}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  if (isNaN(val)) { setSeatsToBook(1); return; }
+                  setSeatsToBook(Math.min(Math.max(val, 1), ride.availableSeats));
+                }}
                 className="input-field mt-1 w-full"
               />
             </div>

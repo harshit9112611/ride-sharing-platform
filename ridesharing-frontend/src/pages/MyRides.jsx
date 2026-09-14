@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle, XCircle } from 'lucide-react';
+import { PlusCircle, XCircle, Trash2 } from 'lucide-react';
 import { ridesApi, bookingsApi } from '../services/auth';
 import RideCard from '../components/rides/RideCard';
 import EmptyState from '../components/common/EmptyState';
@@ -35,6 +35,18 @@ export default function MyRides() {
       .then(({ data }) => setBookings(data))
       .catch(() => setBookings([]))
       .finally(() => setLoadingBookings(false));
+  };
+
+  const handleDeleteRide = async (rideId) => {
+    if (!window.confirm('Delete this ride? This cannot be undone.')) return;
+    
+    try {
+      await ridesApi.remove(rideId);
+      toast.success('Ride deleted');
+      fetchRides();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to delete ride');
+    }
   };
 
   const handleCancelBooking = async (bookingId) => {
@@ -120,7 +132,18 @@ export default function MyRides() {
           ) : filteredRides.length > 0 ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {filteredRides.map((ride) => (
-                <RideCard key={ride.id} ride={ride} showRequest={false} />
+                <div key={ride.id} className="relative group">
+                  <RideCard ride={ride} showRequest={false} />
+                  {ride.status === 'OPEN' && (
+                    <button
+                      onClick={() => handleDeleteRide(ride.id)}
+                      className="absolute top-2 right-2 rounded-lg bg-white/90 p-1.5 text-error shadow opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error hover:text-white"
+                      title="Delete Ride"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           ) : (

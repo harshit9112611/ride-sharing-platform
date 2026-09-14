@@ -12,6 +12,7 @@ export const ridesApi = {
   search: (params) => api.get('/api/rides/search', { params }),
   getMyRides: () => api.get('/api/rides/my'),
   getById: (id) => api.get(`/api/rides/${id}`),
+  remove: (id) => api.delete(`/api/rides/${id}`),
 };
 
 export const bookingsApi = {
