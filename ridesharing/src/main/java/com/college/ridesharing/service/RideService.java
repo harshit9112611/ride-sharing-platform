@@ -43,6 +43,9 @@ public class RideService {
     public Ride createRide(RideRequestDTO request, String driverEmail) {
         User driver = userRepository.findByCollegeEmail(driverEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Driver not found"));
+        if (!Boolean.TRUE.equals(driver.getVerified())) {
+            throw new IllegalArgumentException("Please verify your email before posting rides");
+        }
 
         Ride ride = new Ride();
         ride.setDriver(driver);

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Car, Check } from 'lucide-react';
+import { Eye, EyeOff, Car, Check, Mail, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import { authApi } from '../../services/auth';
 import { validateRegisterForm, getPasswordStrength } from '../../utils/validation';
 import { BRANCHES, ACADEMIC_YEARS } from '../../utils/constants';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -23,6 +24,9 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [accountCreated, setAccountCreated] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [resending, setResending] = useState(false);
 
   const strength = getPasswordStrength(form.password);
 
@@ -55,8 +59,8 @@ export default function Register() {
         phoneNumber: form.phoneNumber,
         password: form.password,
       });
-      toast.success('Account created successfully!');
-      navigate('/dashboard');
+      setVerificationEmail(form.collegeEmail);
+      setAccountCreated(true);
     } catch (err) {
       const message = err.response?.data?.error || 'Registration failed';
       toast.error(message);
@@ -64,6 +68,51 @@ export default function Register() {
       setLoading(false);
     }
   };
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      const { data } = await authApi.resendVerification(verificationEmail);
+      toast.success(data.message || 'Verification email sent');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Unable to resend verification email');
+    } finally {
+      setResending(false);
+    }
+  };
+
+  if (accountCreated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
+        <div className="w-full max-w-lg rounded-2xl bg-white p-8 text-center shadow-sm">
+          <Mail className="mx-auto h-12 w-12 text-accent" />
+          <h1 className="mt-5 font-display text-2xl font-bold text-text-primary">
+            Account created
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary">
+            Check your email at <span className="font-medium">{verificationEmail}</span> to verify
+            your account before posting rides.
+          </p>
+          <button
+            type="button"
+            onClick={handleResendVerification}
+            disabled={resending}
+            className="btn-accent mt-6 w-full py-3"
+          >
+            {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+            Resend verification
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="mt-4 text-sm font-medium text-accent hover:underline"
+          >
+            Go to login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background px-5 py-10 sm:px-8">

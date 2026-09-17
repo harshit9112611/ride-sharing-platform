@@ -8,3 +8,4 @@
 # H2 database file (runtime data)
 ridesharing/data/
 
+src/main/resources/application.properties
