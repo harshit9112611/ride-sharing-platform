@@ -30,3 +30,7 @@ export const vehiclesApi = {
   update: (id, data) => api.put(`/api/vehicles/${id}`, data),
   remove: (id) => api.delete(`/api/vehicles/${id}`),
 };
+
+export const statsApi = {
+  getPublic: () => api.get('/api/stats'),
+};

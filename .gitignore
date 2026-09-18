@@ -9,3 +9,6 @@
 ridesharing/data/
 
 src/main/resources/application.properties
+ridesharing/src/main/resources/application.properties
+
+ridesharing-frontend/.env

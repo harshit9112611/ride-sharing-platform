@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Car, Check, Mail, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Check, Mail, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { authApi } from '../../services/auth';
@@ -117,13 +117,8 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-background px-5 py-10 sm:px-8">
       <div className="mx-auto max-w-lg animate-slide-up">
-        <Link to="/login" className="mb-8 inline-flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <Car className="h-4.5 w-4.5 text-white" />
-          </div>
-          <span className="font-display text-lg font-bold">
-            LNCT<span className="text-accent">Shares</span>
-          </span>
+        <Link to="/login" className="mb-8 inline-flex">
+          <img src="/logo.png" alt="LNCTShares" className="h-10 w-auto" />
         </Link>
 
         <h1 className="font-display text-2xl font-bold text-text-primary">Create your account</h1>

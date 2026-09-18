@@ -50,7 +50,8 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/test",
                                 "/api/auth/verify-email",
-                                "/api/auth/resend-verification")
+                                "/api/auth/resend-verification",
+                                "/api/stats")
                         .permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()

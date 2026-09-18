@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { AlertCircle, Calendar, Car, Clock, MapPin, PlusCircle, RefreshCw, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ridesApi } from '../../services/auth';
 import { connectWebSocket } from '../../services/websocket';
-import { PICKUP_LOCATIONS, DESTINATION_LOCATIONS, SORT_OPTIONS } from '../../utils/constants';
+import { PICKUP_LOCATIONS, DESTINATION_LOCATIONS } from '../../utils/constants';
 import { toInputDate } from '../../utils/formatDate';
 import RideCard from './RideCard';
-import EmptyState from '../common/EmptyState';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 function sortRides(rides, sortBy) {
@@ -36,6 +36,7 @@ export default function SearchRides() {
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
   const handleSearch = useCallback(async (e) => {
     e?.preventDefault();
@@ -45,17 +46,22 @@ export default function SearchRides() {
     }
 
     setLoading(true);
+    setSearchError('');
     setSearched(true);
     try {
       const { data } = await ridesApi.search(filters);
       setRides(data);
+      setSearchError('');
     } catch {
       toast.error('Search failed');
       setRides([]);
+      setSearchError('Unable to load rides. Please try again.');
     } finally {
       setLoading(false);
     }
   }, [filters]);
+
+  const handleRetry = () => handleSearch();
 
   useEffect(() => {
     const handleNewRide = (ride) => {
@@ -89,18 +95,32 @@ export default function SearchRides() {
         </div>
       </div>
 
-      <form onSubmit={handleSearch} className="mt-8 card p-5 sm:p-6">
-        <div className="grid gap-4 sm:grid-cols-4">
+      <form onSubmit={handleSearch} className="mt-8 card p-5 shadow-soft sm:p-6">
+        <div className="grid gap-5 sm:grid-cols-4">
           <div>
-            <label htmlFor="source" className="mb-1.5 block text-xs font-medium text-text-muted">From</label>
-            <select id="source" value={filters.source} onChange={(e) => setFilters({ ...filters, source: e.target.value })} className="input-field">
+            <label htmlFor="source" className="mb-2 flex items-center gap-1.5 text-sm font-medium text-text-primary">
+              <MapPin className="h-3.5 w-3.5 text-accent" /> From
+            </label>
+            <select
+              id="source"
+              value={filters.source}
+              onChange={(e) => setFilters({ ...filters, source: e.target.value })}
+              className="input-field transition-all duration-200 focus:ring-2 focus:ring-primary-200"
+            >
               <option value="">Select source</option>
               {PICKUP_LOCATIONS.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
             </select>
           </div>
           <div>
-            <label htmlFor="destination" className="mb-1.5 block text-xs font-medium text-text-muted">To</label>
-            <select id="destination" value={filters.destination} onChange={(e) => setFilters({ ...filters, destination: e.target.value })} className="input-field">
+            <label htmlFor="destination" className="mb-2 flex items-center gap-1.5 text-sm font-medium text-text-primary">
+              <MapPin className="h-3.5 w-3.5 text-accent" /> To
+            </label>
+            <select
+              id="destination"
+              value={filters.destination}
+              onChange={(e) => setFilters({ ...filters, destination: e.target.value })}
+              className="input-field transition-all duration-200 focus:ring-2 focus:ring-primary-200"
+            >
               <option value="">Select destination</option>
               {DESTINATION_LOCATIONS.map((loc) => (
                 <option key={loc} value={loc}>{loc}</option>
@@ -108,11 +128,24 @@ export default function SearchRides() {
             </select>
           </div>
           <div>
-            <label htmlFor="date" className="mb-1.5 block text-xs font-medium text-text-muted">Date</label>
-            <input id="date" type="date" value={filters.date} onChange={(e) => setFilters({ ...filters, date: e.target.value })} min={toInputDate()} className="input-field" />
+            <label htmlFor="date" className="mb-2 flex items-center gap-1.5 text-sm font-medium text-text-primary">
+              <Calendar className="h-3.5 w-3.5 text-accent" /> Date
+            </label>
+            <input
+              id="date"
+              type="date"
+              value={filters.date}
+              onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+              min={toInputDate()}
+              className="input-field transition-all duration-200 focus:ring-2 focus:ring-primary-200"
+            />
           </div>
           <div className="flex items-end">
-            <button type="submit" disabled={loading} className="btn-accent w-full">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-accent w-full py-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+            >
               {loading ? <LoadingSpinner size="sm" className="text-white" /> : <><Search className="h-4 w-4" /> Search</>}
             </button>
           </div>
@@ -125,28 +158,64 @@ export default function SearchRides() {
             <p className="text-sm text-text-secondary">
               {loading ? 'Searching...' : `${sortedRides.length} ride${sortedRides.length !== 1 ? 's' : ''} found`}
             </p>
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-text-muted" />
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-text-secondary">
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+            <div className="flex rounded-lg border border-border bg-surface p-1">
+              <button
+                type="button"
+                onClick={() => setSortBy('time')}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                  sortBy === 'time'
+                    ? 'border border-primary-500 bg-primary-50 text-primary'
+                    : 'text-text-secondary hover:bg-surface-hover'
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5" /> By Time
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('price')}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                  sortBy === 'price'
+                    ? 'border border-primary-500 bg-primary-50 text-primary'
+                    : 'text-text-secondary hover:bg-surface-hover'
+                }`}
+              >
+                ₹ By Price
+              </button>
             </div>
           </div>
 
           {loading ? (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="card h-48 p-5">
-                  <div className="skeleton h-4 w-3/4" />
-                  <div className="skeleton mt-3 h-3 w-1/2" />
-                  <div className="skeleton mt-8 h-10 w-full" />
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="card h-52 p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="skeleton h-4 w-3/5" />
+                    <div className="skeleton h-5 w-12 rounded-lg" />
+                  </div>
+                  <div className="skeleton mt-3 h-3 w-4/5" />
+                  <div className="mt-6 border-t border-border pt-4">
+                    <div className="skeleton h-9 w-full rounded-lg" />
+                  </div>
                 </div>
               ))}
             </div>
+          ) : searchError ? (
+            <div className="card mx-auto max-w-lg p-8 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-error">
+                <AlertCircle className="h-6 w-6" />
+              </div>
+              <h2 className="mt-4 font-display text-lg font-semibold text-text-primary">Couldn&apos;t load rides</h2>
+              <p className="mt-2 text-sm text-text-secondary">{searchError}</p>
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="btn-accent mt-5 px-4 py-2.5 transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2"
+              >
+                <RefreshCw className="h-4 w-4" /> Try Again
+              </button>
+            </div>
           ) : sortedRides.length > 0 ? (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {sortedRides.map((ride) => (
                 <RideCard
                   key={ride.id}
@@ -156,10 +225,18 @@ export default function SearchRides() {
               ))}
             </div>
           ) : (
-            <EmptyState
-              title="No rides found"
-              description="Try different locations or dates. New rides are posted throughout the day."
-            />
+            <div className="card mx-auto max-w-lg p-8 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Car className="h-6 w-6" />
+              </div>
+              <h2 className="mt-4 font-display text-lg font-semibold text-text-primary">No rides found</h2>
+              <p className="mt-2 text-sm text-text-secondary">
+                Try different locations or dates, or be the first to post a ride.
+              </p>
+              <Link to="/rides/create" className="btn-accent mt-5 inline-flex px-4 py-2.5 transition-all duration-200 hover:shadow-md">
+                <PlusCircle className="h-4 w-4" /> Post a Ride
+              </Link>
+            </div>
           )}
         </div>
       )}

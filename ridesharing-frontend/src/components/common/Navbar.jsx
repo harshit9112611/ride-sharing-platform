@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Car, Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const navLinks = [
@@ -40,13 +40,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 glass-nav">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8" aria-label="Main navigation">
-        <Link to={isAuthenticated ? '/dashboard' : '/login'} className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary transition-transform duration-200 group-hover:scale-105">
-            <Car className="h-4.5 w-4.5 text-white" strokeWidth={2} />
-          </div>
-          <span className="font-display text-lg font-bold tracking-heading">
-            LNCT<span className="text-accent">Shares</span>
-          </span>
+        <Link to={isAuthenticated ? '/dashboard' : '/login'} className="group">
+          <img src="/logo.png" alt="LNCTShares" className="h-9 w-auto transition-transform duration-200 group-hover:scale-105" />
         </Link>
 
         {isAuthenticated && (

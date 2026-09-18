@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, Clock, Users, PlusCircle } from 'lucide-react';
+import { MapPin, Calendar, Clock, Users, Car, Minus, Plus, PlusCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { ridesApi, vehiclesApi } from '../../services/auth';
 import { validateRideForm } from '../../utils/validation';
@@ -116,7 +116,9 @@ export default function CreateRide() {
             </div>
 
             {(form.sourceLocation && form.destinationLocation) && (
-              <RideMap source={form.sourceLocation} destination={form.destinationLocation} />
+              <div className="[&_.absolute.top-2.left-2]:!top-auto [&_.absolute.top-2.left-2]:!bottom-2 [&_.absolute.top-2.left-2]:!left-2 [&_.absolute.top-2.left-2]:!rounded-lg [&_.absolute.top-2.left-2]:!shadow-md">
+                <RideMap source={form.sourceLocation} destination={form.destinationLocation} />
+              </div>
             )}
 
             <div className="grid gap-5 sm:grid-cols-2">
@@ -140,20 +142,49 @@ export default function CreateRide() {
               <label htmlFor="availableSeats" className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
                 <Users className="h-3.5 w-3.5 text-accent" /> Available Seats
               </label>
-              <input id="availableSeats" name="availableSeats" type="number" min="1" max="6" value={form.availableSeats} onChange={handleChange} className="input-field" />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Decrease available seats"
+                  onClick={() => setForm({ ...form, availableSeats: Math.max(1, (Number(form.availableSeats) || 1) - 1) })}
+                  className="rounded-lg border border-gray-200 p-2.5 text-text-secondary transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <input
+                  id="availableSeats"
+                  name="availableSeats"
+                  type="number"
+                  min="1"
+                  max="4"
+                  value={form.availableSeats}
+                  onChange={handleChange}
+                  className="input-field text-center"
+                />
+                <button
+                  type="button"
+                  aria-label="Increase available seats"
+                  onClick={() => setForm({ ...form, availableSeats: Math.min(4, (Number(form.availableSeats) || 1) + 1) })}
+                  className="rounded-lg border border-gray-200 p-2.5 text-text-secondary transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
               {errors.availableSeats && <p className="mt-1 text-xs text-error">{errors.availableSeats}</p>}
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium">Ride Type</p>
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                <Car className="h-3.5 w-3.5 text-accent" /> Ride Type
+              </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {RIDE_TYPES.map((type) => (
                   <label
                     key={type.value}
                     className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 ${
                       form.rideType === type.value
-                        ? 'border-accent bg-accent/5 shadow-soft'
-                        : 'border-border hover:border-border-hover'
+                        ? 'border-2 border-primary-500 bg-primary-50/30 shadow-soft'
+                        : 'border border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <input
@@ -178,6 +209,48 @@ export default function CreateRide() {
                 {errors.price && <p className="mt-1 text-xs text-error">{errors.price}</p>}
               </div>
             )}
+
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-navy-700">
+                <Car className="h-3.5 w-3.5 text-accent" /> Vehicle (Optional)
+              </label>
+              <p className="mb-3 text-xs text-text-muted">
+                Optional — link a vehicle for passengers to identify you
+              </p>
+              <select
+                name="vehicleId"
+                value={form.vehicleId}
+                onChange={handleChange}
+                disabled={vehicles.length === 0}
+                className="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl transition-colors duration-200 hover:border-gray-400
+                           focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200
+                           disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                {vehicles.length === 0 ? (
+                  <option value="">No vehicles added</option>
+                ) : (
+                  <>
+                    <option value="">— Not linked —</option>
+                    {vehicles.map(v => (
+                      <option key={v.id} value={v.id}>
+                        {v.brand} {v.model} ({v.vehicleNumber})
+                      </option>
+                    ))}
+                  </>
+                )}
+              </select>
+              {vehicles.length === 0 && (
+                <p className="text-xs text-gray-400 mt-1">
+                  <a href="/profile" className="text-primary-600 hover:underline">Add a vehicle in Profile</a> to link it here
+                </p>
+              )}
+            </div>
+
+            <button type="submit" disabled={loading} className="btn-accent w-full py-3 transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-200 focus:ring-offset-2">
+              {loading ? <LoadingSpinner size="sm" className="text-white" /> : (
+                <><PlusCircle className="h-4 w-4" /> Post Ride</>
+              )}
+            </button>
           </div>
         </div>
 
@@ -203,44 +276,6 @@ export default function CreateRide() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-navy-700 mb-1.5">
-              Vehicle (Optional)
-            </label>
-            <select
-              name="vehicleId"
-              value={form.vehicleId}
-              onChange={handleChange}
-              disabled={vehicles.length === 0}
-              className="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl
-                         focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200
-                         disabled:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              {vehicles.length === 0 ? (
-                <option value="">No vehicles added</option>
-              ) : (
-                <>
-                  <option value="">— Not linked —</option>
-                  {vehicles.map(v => (
-                    <option key={v.id} value={v.id}>
-                      {v.brand} {v.model} ({v.vehicleNumber})
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
-            {vehicles.length === 0 && (
-              <p className="text-xs text-gray-400 mt-1">
-                <a href="/profile" className="text-primary-600 hover:underline">Add a vehicle in Profile</a> to link it here
-              </p>
-            )}
-          </div>
-
-          <button type="submit" disabled={loading} className="btn-accent w-full py-3">
-            {loading ? <LoadingSpinner size="sm" className="text-white" /> : (
-              <><PlusCircle className="h-4 w-4" /> Post Ride</>
-            )}
-          </button>
         </div>
       </form>
     </div>

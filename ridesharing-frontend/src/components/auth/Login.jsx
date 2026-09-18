@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Car } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -40,13 +40,8 @@ export default function Login() {
   return (
     <div className="flex min-h-screen">
       <div className="hidden w-[45%] bg-primary lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-            <Car className="h-5 w-5 text-white" />
-          </div>
-          <span className="font-display text-xl font-bold text-white">
-            LNCT<span className="text-blue-400">Shares</span>
-          </span>
+        <div>
+          <img src="/logo.png" alt="LNCTShares" className="h-10 w-auto" />
         </div>
         <div className="max-w-sm">
           <h1 className="font-display text-3xl font-bold leading-tight text-white">
@@ -62,14 +57,7 @@ export default function Login() {
       <div className="flex flex-1 items-center justify-center px-5 py-12 sm:px-8">
         <div className="w-full max-w-md animate-slide-up">
           <div className="mb-8 lg:hidden">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-                <Car className="h-4.5 w-4.5 text-white" />
-              </div>
-              <span className="font-display text-lg font-bold">
-                LNCT<span className="text-accent">Shares</span>
-              </span>
-            </div>
+            <img src="/logo.png" alt="LNCTShares" className="h-9 w-auto" />
           </div>
 
           <h2 className="font-display text-2xl font-bold text-text-primary">Sign in</h2>

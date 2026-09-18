@@ -5,9 +5,7 @@ export default function Footer() {
     <footer className="mt-auto border-t border-border bg-surface">
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-4 px-5 py-8 sm:flex-row sm:items-center sm:px-8">
         <div>
-          <p className="font-display text-sm font-semibold text-text-primary">
-            LNCT<span className="text-accent">Shares</span>
-          </p>
+          <img src="/logo.png" alt="LNCTShares" className="h-8 w-auto" />
           <p className="mt-1 text-xs text-text-muted">
             Campus ride-sharing platform
           </p>
