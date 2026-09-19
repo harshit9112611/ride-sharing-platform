@@ -1,2 +1,6 @@
 
 src/main/resources/application.properties
+target/
+data/
+*.log
+application-local.properties
