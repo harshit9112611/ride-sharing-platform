@@ -4,7 +4,7 @@
   }
 
   body {
-    @apply bg-background text-text-primary font-sans antialiased;
+    @apply bg-background text-text-primary font-sans antialiased dark:bg-gray-900 dark:text-gray-100;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
@@ -36,11 +36,11 @@
   .input-field {
     @apply w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-text-primary
       placeholder:text-text-muted transition-colors duration-200 hover:border-border-hover
-      focus:border-accent focus:ring-1 focus:ring-accent;
+      focus:border-accent focus:ring-1 focus:ring-accent dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500;
   }
 
   .card {
-    @apply rounded-2xl border border-border bg-surface shadow-soft transition-all duration-200;
+    @apply rounded-2xl border border-border bg-surface shadow-soft transition-all duration-200 dark:border-gray-700 dark:bg-gray-800;
   }
 
   .card-hover {
@@ -56,11 +56,26 @@
   }
 
   .glass-nav {
-    @apply border-b border-border/60 bg-surface/80 backdrop-blur-md;
+    @apply border-b border-border/60 bg-surface/80 backdrop-blur-md dark:border-gray-700 dark:bg-gray-800/80;
   }
 }
 
 @layer utilities {
+  .dark .text-text-primary { @apply text-gray-100; }
+  .dark .text-text-secondary { @apply text-gray-300; }
+  .dark .text-text-muted { @apply text-gray-400; }
+  .dark .border-border { @apply border-gray-700; }
+  .dark .border-border-hover { @apply border-gray-600; }
+  .dark .bg-surface { @apply bg-gray-800; }
+  .dark .bg-surface-hover { @apply bg-gray-700; }
+  .dark .bg-background { @apply bg-gray-900; }
+  .dark .bg-white { @apply bg-gray-800; }
+  .dark .bg-gray-50 { @apply bg-gray-800; }
+  .dark .bg-gray-100 { @apply bg-gray-700; }
+  .dark .border-gray-200 { @apply border-gray-700; }
+  .dark .border-gray-300 { @apply border-gray-600; }
+  .dark .text-navy-700 { @apply text-gray-200; }
+
   .text-balance {
     text-wrap: balance;
   }

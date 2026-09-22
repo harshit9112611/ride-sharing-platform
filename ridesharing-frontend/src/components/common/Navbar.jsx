@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import NotificationButton from './NotificationButton';
+import ThemeToggle from './ThemeToggle';
 
 const navLinks = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -57,13 +58,14 @@ export default function Navbar() {
 
             {/* Desktop right side */}
             <div className="hidden items-center gap-3 md:flex">
+              <ThemeToggle />
               <NotificationButton />
 
               <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-text-secondary transition-all duration-200 hover:border-border-hover hover:bg-surface-hover"
+                  className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-medium text-text-secondary transition-all duration-200 hover:border-border-hover hover:bg-surface-hover dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                   aria-expanded={dropdownOpen}
                   aria-haspopup="true"
                 >
@@ -75,11 +77,11 @@ export default function Navbar() {
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-surface py-1.5 shadow-hard animate-fade-in">
+                  <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-surface py-1.5 shadow-hard animate-fade-in dark:border-gray-700 dark:bg-gray-800">
                     <Link
                       to="/profile"
                       onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
                     >
                       <User className="h-4 w-4" />
                       Profile
@@ -111,7 +113,7 @@ export default function Navbar() {
       </nav>
 
       {mobileOpen && isAuthenticated && (
-        <div className="border-t border-border bg-surface px-5 py-4 md:hidden animate-slide-up">
+        <div className="border-t border-border bg-surface px-5 py-4 md:hidden animate-slide-up dark:border-gray-700 dark:bg-gray-800">
           <div className="flex flex-col gap-1">
             {navLinks.map((link) => (
               <NavLink
@@ -129,6 +131,9 @@ export default function Navbar() {
             ))}
             <hr className="my-2 border-border" />
 
+            <div className="rounded-lg px-3 py-2">
+              <ThemeToggle />
+            </div>
             <div className="rounded-lg px-3 py-2">
               <NotificationButton />
             </div>

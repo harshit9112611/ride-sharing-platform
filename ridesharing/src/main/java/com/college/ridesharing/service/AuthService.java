@@ -55,7 +55,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRating(0.0);
         user.setTotalRides(0);
-        user.setVerified(false);
+        user.setVerified(true);
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
