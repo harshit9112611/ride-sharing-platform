@@ -64,7 +64,7 @@ public class PushService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("title", "New Ride Available");
         payload.put("body", source + " -> " + destination + " at " + time);
-        payload.put("url", "/rides/search");
+        payload.put("url", "https://lnctshares.vercel.app/rides/search");
         List<PushSubscription> subs = subscriptionRepository.findByUserIdNot(driverId);
         sendToSubscriptions(subs, payload);
     }
@@ -73,7 +73,7 @@ public class PushService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("title", "Booking Confirmed");
         payload.put("body", "Your ride " + source + " -> " + destination + " was accepted");
-        payload.put("url", "/my-rides");
+        payload.put("url", "https://lnctshares.vercel.app/my-rides");
         List<PushSubscription> subs = subscriptionRepository.findByUserId(passengerId);
         sendToSubscriptions(subs, payload);
     }
@@ -82,7 +82,7 @@ public class PushService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("title", "New Booking Request");
         payload.put("body", passengerName + " booked your ride " + source + " -> " + destination);
-        payload.put("url", "/my-rides");
+        payload.put("url", "https://lnctshares.vercel.app/my-rides");
         List<PushSubscription> subs = subscriptionRepository.findByUserId(driverId);
         sendToSubscriptions(subs, payload);
     }

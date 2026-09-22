@@ -72,10 +72,6 @@ LNCTShares provides a **verified, student-only** platform where students can:
 ### Public Stats
 - Live counters for registered users, rides posted, bookings, and seats shared
 
-## Push Notifications
-
-LNCTShares uses Web Push (VAPID) to send real-time notifications for new rides and bookings, even when the browser is closed. See [PUSH_NOTIFICATIONS.md](./ridesharing/PUSH_NOTIFICATIONS.md) for setup and testing instructions.
-
 ---
 
 ## Tech Stack
@@ -341,8 +337,6 @@ Relationships:
 
 ### Ride Details
 ![Ride Details](./screenshots/ride-details.png)
-
-*(Add screenshots to a `screenshots/` folder in your repo)*
 
 ---
 
