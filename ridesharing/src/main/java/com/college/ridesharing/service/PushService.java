@@ -69,10 +69,10 @@ public class PushService {
         sendToSubscriptions(subs, payload);
     }
 
-    public void notifyBookingAccepted(Long passengerId, String source, String destination) {
+    public void notifyBookingAccepted(Long passengerId, String driverName, String source, String destination) {
         Map<String, Object> payload = new HashMap<>();
-        payload.put("title", "Booking Confirmed");
-        payload.put("body", "Your ride " + source + " -> " + destination + " was accepted");
+        payload.put("title", "Booking Accepted");
+        payload.put("body", driverName + " accepted your ride " + source + " -> " + destination);
         payload.put("url", "https://lnctshares.vercel.app/my-rides");
         List<PushSubscription> subs = subscriptionRepository.findByUserId(passengerId);
         sendToSubscriptions(subs, payload);

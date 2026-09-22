@@ -20,6 +20,8 @@ export const ridesApi = {
 
 export const bookingsApi = {
   book: (rideId, seatsBooked) => api.post(`/api/rides/${rideId}/book`, { seatsBooked }),
+  accept: (bookingId) => api.put(`/api/bookings/requests/${bookingId}/accept`),
+  reject: (bookingId) => api.put(`/api/bookings/requests/${bookingId}/reject`),
   cancel: (bookingId) => api.delete(`/api/bookings/${bookingId}`),
   getMyBookings: () => api.get('/api/bookings/my'),
   received: (status = 'CONFIRMED') => api.get(`/api/bookings/received?status=${status}`),

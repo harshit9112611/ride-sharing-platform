@@ -45,92 +45,120 @@ public class BookingService {
     }
 
     @Transactional
-    public BookingResponseDTO bookRide(
-            Long rideId,
-            String passengerEmail,
-            BookingRequestDTO request) {
-
-        User passenger = userRepository.findByCollegeEmail(passengerEmail)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Passenger not found"));
-
+    public BookingResponseDTO bookRide(Long rideId, User passenger, BookingRequestDTO request) {
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Ride not found"));
-
-        if (ride.getStatus() != RideStatus.OPEN) {
-            throw new IllegalArgumentException(
-                    "Ride is not open for booking");
-        }
+                .orElseThrow(() -> new IllegalArgumentException("Ride not found"));
 
         if (ride.getDriver().getId().equals(passenger.getId())) {
-            throw new IllegalArgumentException(
-                    "Driver cannot book their own ride");
+            throw new IllegalArgumentException("You cannot book your own ride");
         }
 
-        if (request.getSeatsBooked() > ride.getAvailableSeats()) {
-            throw new IllegalArgumentException(
-                    "Not enough seats available");
+        if (ride.getStatus() != Ride.RideStatus.OPEN) {
+            throw new IllegalArgumentException("Ride is not open for booking");
         }
 
-        boolean alreadyBooked =
-                bookingRepository.existsByRideIdAndPassengerIdAndStatus(
-                        rideId,
-                        passenger.getId(),
-                        BookingStatus.CONFIRMED);
-
-        if (alreadyBooked) {
-            throw new IllegalArgumentException(
-                    "You have already booked this ride");
+        if (ride.getAvailableSeats() < request.getSeatsBooked()) {
+            throw new IllegalArgumentException("Not enough seats available");
         }
 
-        // Reduce available seats
-        ride.setAvailableSeats(
-                ride.getAvailableSeats() - request.getSeatsBooked());
+        boolean alreadyConfirmed = bookingRepository.existsByRideIdAndPassengerIdAndStatus(
+                rideId, passenger.getId(), Booking.BookingStatus.CONFIRMED);
+        boolean alreadyPending = bookingRepository.existsByRideIdAndPassengerIdAndStatus(
+                rideId, passenger.getId(), Booking.BookingStatus.PENDING);
 
-        if (ride.getAvailableSeats() == 0) {
-            ride.setStatus(RideStatus.FULL);
+        if (alreadyConfirmed || alreadyPending) {
+            throw new IllegalArgumentException("You have already booked this ride");
         }
 
-        rideRepository.save(ride);
-
-        // Save booking
         Booking booking = new Booking();
-
         booking.setRide(ride);
         booking.setPassenger(passenger);
         booking.setSeatsBooked(request.getSeatsBooked());
-        booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setStatus(Booking.BookingStatus.PENDING);
         booking.setCreatedAt(LocalDateTime.now());
 
         Booking savedBooking = bookingRepository.save(booking);
 
-        BookingResponseDTO dto = mapToDTO(savedBooking);
-
-        // Existing WebSocket notification
-        messagingTemplate.convertAndSend(
-                "/topic/driver/" + ride.getDriver().getId() + "/bookings",
-                dto
-        );
-
-        // New Web Push notification to driver
         try {
+            messagingTemplate.convertAndSend(
+                    "/topic/driver/" + ride.getDriver().getId() + "/bookings",
+                    mapToDTO(savedBooking));
+        } catch (Exception e) {
+            System.err.println("WebSocket to driver failed: " + e.getMessage());
+        }
 
+        try {
             pushService.notifyNewBooking(
                     ride.getDriver().getId(),
                     passenger.getFullName(),
                     ride.getSourceLocation(),
-                    ride.getDestinationLocation()
-            );
-
+                    ride.getDestinationLocation());
         } catch (Exception e) {
-
-            System.err.println(
-                    "Push to driver failed: " + e.getMessage()
-            );
+            System.err.println("Push to driver failed: " + e.getMessage());
         }
 
-        return dto;
+        return mapToDTO(savedBooking);
+    }
+
+    @Transactional
+    public BookingResponseDTO acceptBooking(Long bookingId, String driverEmail) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        Ride ride = booking.getRide();
+        User driver = ride.getDriver();
+
+        if (!driver.getCollegeEmail().equals(driverEmail)) {
+            throw new IllegalArgumentException("Only the driver can accept this booking");
+        }
+
+        if (booking.getStatus() != Booking.BookingStatus.PENDING) {
+            throw new IllegalArgumentException("Only pending bookings can be accepted");
+        }
+
+        if (booking.getSeatsBooked() > ride.getAvailableSeats()) {
+            throw new IllegalArgumentException("Not enough seats available");
+        }
+
+        booking.setStatus(Booking.BookingStatus.CONFIRMED);
+        Booking savedBooking = bookingRepository.save(booking);
+
+        ride.setAvailableSeats(ride.getAvailableSeats() - booking.getSeatsBooked());
+        if (ride.getAvailableSeats() == 0) {
+            ride.setStatus(Ride.RideStatus.FULL);
+        }
+        rideRepository.save(ride);
+
+        try {
+            pushService.notifyBookingAccepted(
+                    booking.getPassenger().getId(),
+                    driver.getFullName(),
+                    ride.getSourceLocation(),
+                    ride.getDestinationLocation());
+        } catch (Exception e) {
+            System.err.println("Push to passenger failed: " + e.getMessage());
+        }
+
+        return mapToDTO(savedBooking);
+    }
+
+    @Transactional
+    public BookingResponseDTO rejectBooking(Long bookingId, String driverEmail) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+
+        if (!booking.getRide().getDriver().getCollegeEmail().equals(driverEmail)) {
+            throw new IllegalArgumentException("Only the driver can reject this booking");
+        }
+
+        if (booking.getStatus() != Booking.BookingStatus.PENDING) {
+            throw new IllegalArgumentException("Only pending bookings can be rejected");
+        }
+
+        booking.setStatus(Booking.BookingStatus.CANCELLED);
+        Booking savedBooking = bookingRepository.save(booking);
+
+        return mapToDTO(savedBooking);
     }
 
     @Transactional
@@ -244,6 +272,11 @@ public class BookingService {
                 booking.getRide()
                         .getDepartureTime()
                         .toString());
+
+        if (booking.getPassenger() != null) {
+            dto.setPassengerBranch(booking.getPassenger().getBranch());
+            dto.setPassengerAcademicYear(booking.getPassenger().getAcademicYear());
+        }
 
         return dto;
     }

@@ -2,6 +2,9 @@ package com.college.ridesharing.controller;
 
 import com.college.ridesharing.dto.BookingRequestDTO;
 import com.college.ridesharing.dto.BookingResponseDTO;
+import com.college.ridesharing.model.Booking;
+import com.college.ridesharing.model.User;
+import com.college.ridesharing.repository.UserRepository;
 import com.college.ridesharing.service.BookingService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -13,13 +16,11 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.college.ridesharing.model.Booking;
-import com.college.ridesharing.model.User;
-import com.college.ridesharing.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api")
@@ -39,9 +40,36 @@ public class BookingController {
             @Valid @RequestBody BookingRequestDTO request,
             Authentication authentication) {
         try {
-            String passengerEmail = authentication.getName();
-            BookingResponseDTO response = bookingService.bookRide(rideId, passengerEmail, request);
+            User passenger = userRepository.findByCollegeEmail(authentication.getName())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            BookingResponseDTO response = bookingService.bookRide(rideId, passenger, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        }
+    }
+
+    @PutMapping("/bookings/requests/{bookingId}/accept")
+    public ResponseEntity<?> acceptBooking(
+            @PathVariable Long bookingId,
+            Authentication authentication) {
+        try {
+            String driverEmail = authentication.getName();
+            BookingResponseDTO response = bookingService.acceptBooking(bookingId, driverEmail);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        }
+    }
+
+    @PutMapping("/bookings/requests/{bookingId}/reject")
+    public ResponseEntity<?> rejectBooking(
+            @PathVariable Long bookingId,
+            Authentication authentication) {
+        try {
+            String driverEmail = authentication.getName();
+            BookingResponseDTO response = bookingService.rejectBooking(bookingId, driverEmail);
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }
@@ -72,7 +100,7 @@ public class BookingController {
             @RequestParam(defaultValue = "CONFIRMED") String status,
             Authentication authentication) {
         User driver = userRepository.findByCollegeEmail(authentication.getName())
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
         Booking.BookingStatus bookingStatus;
         try {
             bookingStatus = Booking.BookingStatus.valueOf(status.toUpperCase());

@@ -12,6 +12,9 @@ public class BookingResponseDTO {
     private String status;
     private LocalDateTime createdAt;
     
+    private String passengerBranch;
+    private Integer passengerAcademicYear;
+    
     // Additional fields for frontend convenience
     private String sourceLocation;
     private String destinationLocation;
@@ -107,5 +110,21 @@ public class BookingResponseDTO {
 
     public void setDepartureTime(String departureTime) {
         this.departureTime = departureTime;
+    }
+
+    public String getPassengerBranch() {
+        return passengerBranch;
+    }
+
+    public void setPassengerBranch(String passengerBranch) {
+        this.passengerBranch = passengerBranch;
+    }
+
+    public Integer getPassengerAcademicYear() {
+        return passengerAcademicYear;
+    }
+
+    public void setPassengerAcademicYear(Integer passengerAcademicYear) {
+        this.passengerAcademicYear = passengerAcademicYear;
     }
 }

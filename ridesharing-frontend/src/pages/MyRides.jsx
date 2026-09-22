@@ -12,6 +12,7 @@ export default function MyRides() {
 
   const [rides, setRides] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   const [loadingRides, setLoadingRides] = useState(true);
   const [loadingBookings, setLoadingBookings] = useState(true);
@@ -21,6 +22,7 @@ export default function MyRides() {
   useEffect(() => {
     fetchRides();
     fetchBookings();
+    fetchPendingRequests();
   }, []);
 
   const fetchRides = () => {
@@ -35,6 +37,34 @@ export default function MyRides() {
       .then(({ data }) => setBookings(data))
       .catch(() => setBookings([]))
       .finally(() => setLoadingBookings(false));
+  };
+
+  const fetchPendingRequests = () => {
+    bookingsApi.received('PENDING')
+      .then(({ data }) => setPendingRequests(Array.isArray(data) ? data : []))
+      .catch(() => setPendingRequests([]));
+  };
+
+  const handleAcceptBooking = async (bookingId) => {
+    try {
+      await bookingsApi.accept(bookingId);
+      toast.success('Booking accepted');
+      fetchPendingRequests();
+      fetchRides();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to accept booking');
+    }
+  };
+
+  const handleRejectBooking = async (bookingId) => {
+    if (!window.confirm('Reject this booking?')) return;
+    try {
+      await bookingsApi.reject(bookingId);
+      toast.success('Booking rejected');
+      fetchPendingRequests();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to reject booking');
+    }
   };
 
   const handleDeleteRide = async (rideId) => {
@@ -147,6 +177,39 @@ export default function MyRides() {
                       <Trash2 className="h-4 w-4" />
                     </button>
                   )}
+                  {pendingRequests.filter(pr => pr.rideId === ride.id).length > 0 && (
+                    <div className="mt-3 rounded-xl border border-yellow-300 bg-yellow-50 p-3 dark:border-yellow-700 dark:bg-yellow-900/20">
+                      <p className="mb-2 text-xs font-semibold text-yellow-800 dark:text-yellow-200">
+                        Pending Requests
+                      </p>
+                      {pendingRequests.filter(pr => pr.rideId === ride.id).map(pr => (
+                        <div key={pr.id} className="flex items-center justify-between py-1.5 text-sm">
+                          <div>
+                            <p className="font-medium text-text-primary dark:text-gray-100">{pr.passengerName}</p>
+                            <p className="text-xs text-text-secondary dark:text-gray-400">
+                              {pr.passengerBranch} · Year {pr.passengerAcademicYear} · {pr.seatsBooked} seat(s)
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleAcceptBooking(pr.id)}
+                              className="rounded-lg bg-green-600 px-3 py-1 text-xs font-medium text-white hover:bg-green-700"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRejectBooking(pr.id)}
+                              className="rounded-lg bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -174,7 +237,7 @@ export default function MyRides() {
                     <div className="flex items-center gap-2">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                         booking.status === 'CONFIRMED' ? 'bg-success/10 text-success' :
-                        booking.status === 'CANCELLED' ? 'bg-error/10 text-error' :
+                        booking.status === 'CANCELLED' ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300' :
                         'bg-warning/10 text-warning'
                       }`}>
                         {booking.status}
