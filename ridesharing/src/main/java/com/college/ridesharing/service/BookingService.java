@@ -10,9 +10,11 @@ import com.college.ridesharing.model.User;
 import com.college.ridesharing.repository.BookingRepository;
 import com.college.ridesharing.repository.RideRepository;
 import com.college.ridesharing.repository.UserRepository;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,121 +27,224 @@ public class BookingService {
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public BookingService(BookingRepository bookingRepository, RideRepository rideRepository, UserRepository userRepository, SimpMessagingTemplate messagingTemplate) {
+    // Push notification service
+    private final PushService pushService;
+
+    public BookingService(
+            BookingRepository bookingRepository,
+            RideRepository rideRepository,
+            UserRepository userRepository,
+            SimpMessagingTemplate messagingTemplate,
+            PushService pushService) {
+
         this.bookingRepository = bookingRepository;
         this.rideRepository = rideRepository;
         this.userRepository = userRepository;
         this.messagingTemplate = messagingTemplate;
+        this.pushService = pushService;
     }
 
     @Transactional
-    public BookingResponseDTO bookRide(Long rideId, String passengerEmail, BookingRequestDTO request) {
+    public BookingResponseDTO bookRide(
+            Long rideId,
+            String passengerEmail,
+            BookingRequestDTO request) {
+
         User passenger = userRepository.findByCollegeEmail(passengerEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Passenger not found"));
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Passenger not found"));
 
         Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new IllegalArgumentException("Ride not found"));
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Ride not found"));
 
         if (ride.getStatus() != RideStatus.OPEN) {
-            throw new IllegalArgumentException("Ride is not open for booking");
+            throw new IllegalArgumentException(
+                    "Ride is not open for booking");
         }
 
         if (ride.getDriver().getId().equals(passenger.getId())) {
-            throw new IllegalArgumentException("Driver cannot book their own ride");
+            throw new IllegalArgumentException(
+                    "Driver cannot book their own ride");
         }
 
         if (request.getSeatsBooked() > ride.getAvailableSeats()) {
-            throw new IllegalArgumentException("Not enough seats available");
+            throw new IllegalArgumentException(
+                    "Not enough seats available");
         }
 
-        boolean alreadyBooked = bookingRepository.existsByRideIdAndPassengerIdAndStatus(
-                rideId, passenger.getId(), BookingStatus.CONFIRMED);
+        boolean alreadyBooked =
+                bookingRepository.existsByRideIdAndPassengerIdAndStatus(
+                        rideId,
+                        passenger.getId(),
+                        BookingStatus.CONFIRMED);
+
         if (alreadyBooked) {
-            throw new IllegalArgumentException("You have already booked this ride");
+            throw new IllegalArgumentException(
+                    "You have already booked this ride");
         }
 
         // Reduce available seats
-        ride.setAvailableSeats(ride.getAvailableSeats() - request.getSeatsBooked());
+        ride.setAvailableSeats(
+                ride.getAvailableSeats() - request.getSeatsBooked());
+
         if (ride.getAvailableSeats() == 0) {
             ride.setStatus(RideStatus.FULL);
         }
+
         rideRepository.save(ride);
 
         // Save booking
         Booking booking = new Booking();
+
         booking.setRide(ride);
         booking.setPassenger(passenger);
         booking.setSeatsBooked(request.getSeatsBooked());
         booking.setStatus(BookingStatus.CONFIRMED);
         booking.setCreatedAt(LocalDateTime.now());
-        
+
         Booking savedBooking = bookingRepository.save(booking);
 
         BookingResponseDTO dto = mapToDTO(savedBooking);
-        messagingTemplate.convertAndSend("/topic/driver/" + ride.getDriver().getId() + "/bookings", dto);
-        
+
+        // Existing WebSocket notification
+        messagingTemplate.convertAndSend(
+                "/topic/driver/" + ride.getDriver().getId() + "/bookings",
+                dto
+        );
+
+        // New Web Push notification to driver
+        try {
+
+            pushService.notifyNewBooking(
+                    ride.getDriver().getId(),
+                    passenger.getFullName(),
+                    ride.getSourceLocation(),
+                    ride.getDestinationLocation()
+            );
+
+        } catch (Exception e) {
+
+            System.err.println(
+                    "Push to driver failed: " + e.getMessage()
+            );
+        }
+
         return dto;
     }
 
     @Transactional
-    public BookingResponseDTO cancelBooking(Long bookingId, String passengerEmail) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
+    public BookingResponseDTO cancelBooking(
+            Long bookingId,
+            String passengerEmail) {
 
-        if (!booking.getPassenger().getCollegeEmail().equals(passengerEmail)) {
-            throw new IllegalArgumentException("You can only cancel your own bookings");
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Booking not found"));
+
+        if (!booking.getPassenger().getCollegeEmail()
+                .equals(passengerEmail)) {
+
+            throw new IllegalArgumentException(
+                    "You can only cancel your own bookings");
         }
 
         if (booking.getStatus() != BookingStatus.CONFIRMED) {
-            throw new IllegalArgumentException("Only confirmed bookings can be cancelled");
+            throw new IllegalArgumentException(
+                    "Only confirmed bookings can be cancelled");
         }
 
         Ride ride = booking.getRide();
-        
+
         // Restore seats
-        ride.setAvailableSeats(ride.getAvailableSeats() + booking.getSeatsBooked());
-        if (ride.getStatus() == RideStatus.FULL && ride.getAvailableSeats() > 0) {
+        ride.setAvailableSeats(
+                ride.getAvailableSeats() + booking.getSeatsBooked());
+
+        if (ride.getStatus() == RideStatus.FULL
+                && ride.getAvailableSeats() > 0) {
+
             ride.setStatus(RideStatus.OPEN);
         }
+
         rideRepository.save(ride);
 
         booking.setStatus(BookingStatus.CANCELLED);
-        Booking updatedBooking = bookingRepository.save(booking);
+
+        Booking updatedBooking =
+                bookingRepository.save(booking);
 
         return mapToDTO(updatedBooking);
     }
 
-    public List<BookingResponseDTO> getMyBookings(String passengerEmail) {
-        User passenger = userRepository.findByCollegeEmail(passengerEmail)
-                .orElseThrow(() -> new IllegalArgumentException("Passenger not found"));
+    public List<BookingResponseDTO> getMyBookings(
+            String passengerEmail) {
 
-        List<Booking> bookings = bookingRepository.findByPassengerIdOrderByCreatedAtDesc(passenger.getId());
-        
-        return bookings.stream().map(this::mapToDTO).collect(Collectors.toList());
+        User passenger = userRepository
+                .findByCollegeEmail(passengerEmail)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Passenger not found"));
+
+        List<Booking> bookings =
+                bookingRepository
+                        .findByPassengerIdOrderByCreatedAtDesc(
+                                passenger.getId());
+
+        return bookings.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<BookingResponseDTO> getReceivedRequests(Long driverId, Booking.BookingStatus status) {
-        List<Booking> bookings = bookingRepository.findByRide_Driver_IdAndStatus(driverId, status);
+    public List<BookingResponseDTO> getReceivedRequests(
+            Long driverId,
+            Booking.BookingStatus status) {
+
+        List<Booking> bookings =
+                bookingRepository
+                        .findByRide_Driver_IdAndStatus(
+                                driverId,
+                                status);
+
         return bookings.stream()
-            .map(this::mapToDTO)
-            .collect(Collectors.toList());
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     private BookingResponseDTO mapToDTO(Booking booking) {
+
         BookingResponseDTO dto = new BookingResponseDTO();
+
         dto.setId(booking.getId());
         dto.setRideId(booking.getRide().getId());
+
         if (booking.getPassenger() != null) {
-            dto.setPassengerId(booking.getPassenger().getId());
-            dto.setPassengerName(booking.getPassenger().getFullName());
+            dto.setPassengerId(
+                    booking.getPassenger().getId());
+
+            dto.setPassengerName(
+                    booking.getPassenger().getFullName());
         }
+
         dto.setSeatsBooked(booking.getSeatsBooked());
         dto.setStatus(booking.getStatus().name());
         dto.setCreatedAt(booking.getCreatedAt());
-        dto.setSourceLocation(booking.getRide().getSourceLocation());
-        dto.setDestinationLocation(booking.getRide().getDestinationLocation());
-        dto.setDepartureDate(booking.getRide().getDepartureDate().toString());
-        dto.setDepartureTime(booking.getRide().getDepartureTime().toString());
+
+        dto.setSourceLocation(
+                booking.getRide().getSourceLocation());
+
+        dto.setDestinationLocation(
+                booking.getRide().getDestinationLocation());
+
+        dto.setDepartureDate(
+                booking.getRide()
+                        .getDepartureDate()
+                        .toString());
+
+        dto.setDepartureTime(
+                booking.getRide()
+                        .getDepartureTime()
+                        .toString());
+
         return dto;
     }
 }

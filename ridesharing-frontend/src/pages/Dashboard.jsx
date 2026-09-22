@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Car, Users, PlusCircle, Search, ArrowRight, GraduationCap, Route, BookmarkCheck, Armchair } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ridesApi, bookingsApi, statsApi } from '../services/auth';
+import { isSubscribed } from '../services/pushService';
 import { getRelativeGreeting } from '../utils/formatDate';
 import RideCard from '../components/rides/RideCard';
 import EmptyState from '../components/common/EmptyState';
@@ -15,6 +16,7 @@ export default function Dashboard() {
   const [requestCount, setRequestCount] = useState(0);
   const [appStats, setAppStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [notificationsOn, setNotificationsOn] = useState(false);
 
   useEffect(() => {
     ridesApi.getMyRides()
@@ -30,6 +32,10 @@ export default function Dashboard() {
       .then(({ data }) => setAppStats(data))
       .catch(() => setAppStats(null))
       .finally(() => setStatsLoading(false));
+
+    isSubscribed()
+      .then(setNotificationsOn)
+      .catch(() => setNotificationsOn(false));
   }, []);
 
   const openRides = myRides.filter((r) => r.status === 'OPEN');
@@ -80,6 +86,12 @@ export default function Dashboard() {
             <p className="mt-2 text-xs font-medium text-text-muted">{stat.label}</p>
           </div>
         ))}
+        <div className="flex items-center sm:col-span-2 lg:col-span-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-hover px-2.5 py-1 text-xs font-medium text-text-muted">
+            <span className={`h-1.5 w-1.5 rounded-full ${notificationsOn ? 'bg-success' : 'bg-text-muted'}`} />
+            {notificationsOn ? 'Notifications On' : 'Notifications Off'}
+          </span>
+        </div>
       </div>
 
       <div>
