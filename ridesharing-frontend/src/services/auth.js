@@ -12,6 +12,7 @@ export const authApi = {
 export const ridesApi = {
   create: (data) => api.post('/api/rides', data),
   search: (params) => api.get('/api/rides/search', { params }),
+  getAllAvailable: () => api.get('/api/rides/available'),
   getMyRides: () => api.get('/api/rides/my'),
   getById: (id) => api.get(`/api/rides/${id}`),
   remove: (id) => api.delete(`/api/rides/${id}`),

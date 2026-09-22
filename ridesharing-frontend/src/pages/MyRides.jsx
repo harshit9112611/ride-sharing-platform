@@ -9,13 +9,13 @@ import toast from 'react-hot-toast';
 
 export default function MyRides() {
   const [activeTab, setActiveTab] = useState('POSTED'); // 'POSTED' or 'BOOKINGS'
-  
+
   const [rides, setRides] = useState([]);
   const [bookings, setBookings] = useState([]);
-  
+
   const [loadingRides, setLoadingRides] = useState(true);
   const [loadingBookings, setLoadingBookings] = useState(true);
-  
+
   const [filter, setFilter] = useState('ALL');
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function MyRides() {
 
   const handleDeleteRide = async (rideId) => {
     if (!window.confirm('Delete this ride? This cannot be undone.')) return;
-    
+
     try {
       await ridesApi.remove(rideId);
       toast.success('Ride deleted');
@@ -51,7 +51,7 @@ export default function MyRides() {
 
   const handleCancelBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
-    
+
     try {
       await bookingsApi.cancel(bookingId);
       toast.success('Booking cancelled successfully');
@@ -71,8 +71,12 @@ export default function MyRides() {
     <div className="page-container">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-bold text-text-primary sm:text-3xl">My Activity</h1>
-          <p className="mt-1 text-sm text-text-secondary">Manage your posted rides and bookings</p>
+          <h1 className="font-display text-2xl font-bold text-text-primary dark:text-gray-100 sm:text-3xl">
+            My Activity
+          </h1>
+          <p className="mt-1 text-sm text-text-secondary dark:text-gray-400">
+            Manage your posted rides and bookings
+          </p>
         </div>
         <Link to="/rides/create" className="btn-accent">
           <PlusCircle className="h-4 w-4" /> Post New Ride
@@ -80,24 +84,24 @@ export default function MyRides() {
       </div>
 
       {/* Tabs */}
-      <div className="mt-6 border-b border-border">
+      <div className="mt-6 border-b border-border dark:border-gray-700">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => { setActiveTab('POSTED'); setFilter('ALL'); }}
-            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium ${
+            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors ${
               activeTab === 'POSTED'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-secondary hover:border-border hover:text-text-primary'
+                ? 'border-primary text-primary dark:border-accent dark:text-accent'
+                : 'border-transparent text-text-secondary hover:border-border hover:text-text-primary dark:text-gray-300 dark:hover:text-gray-100'
             }`}
           >
             My Posted Rides
           </button>
           <button
             onClick={() => { setActiveTab('BOOKINGS'); setFilter('ALL'); }}
-            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium ${
+            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors ${
               activeTab === 'BOOKINGS'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-secondary hover:border-border hover:text-text-primary'
+                ? 'border-primary text-primary dark:border-accent dark:text-accent'
+                : 'border-transparent text-text-secondary hover:border-border hover:text-text-primary dark:text-gray-300 dark:hover:text-gray-100'
             }`}
           >
             My Bookings
@@ -114,8 +118,8 @@ export default function MyRides() {
             onClick={() => setFilter(f)}
             className={`rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ${
               filter === f
-                ? 'bg-primary text-white'
-                : 'border border-border text-text-secondary hover:border-border-hover'
+                ? 'bg-primary text-white dark:bg-accent'
+                : 'border border-border text-text-secondary hover:border-border-hover dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-100'
             }`}
           >
             {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
@@ -137,7 +141,7 @@ export default function MyRides() {
                   {ride.status === 'OPEN' && (
                     <button
                       onClick={() => handleDeleteRide(ride.id)}
-                      className="absolute top-2 right-2 rounded-lg bg-white/90 p-1.5 text-error shadow opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error hover:text-white"
+                      className="absolute top-2 right-2 rounded-lg bg-white/90 p-1.5 text-error shadow opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error hover:text-white dark:bg-gray-800/90"
                       title="Delete Ride"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -175,9 +179,11 @@ export default function MyRides() {
                       }`}>
                         {booking.status}
                       </span>
-                      <span className="text-sm font-semibold">{booking.sourceLocation} → {booking.destinationLocation}</span>
+                      <span className="text-sm font-semibold text-text-primary dark:text-gray-100">
+                        {booking.sourceLocation} → {booking.destinationLocation}
+                      </span>
                     </div>
-                    <p className="mt-1 text-sm text-text-secondary">
+                    <p className="mt-1 text-sm text-text-secondary dark:text-gray-400">
                       {booking.departureDate} at {booking.departureTime} • {booking.seatsBooked} seat(s) booked
                     </p>
                   </div>

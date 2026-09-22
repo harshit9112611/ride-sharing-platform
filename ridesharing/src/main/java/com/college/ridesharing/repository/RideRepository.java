@@ -21,5 +21,10 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
             @Param("destination") String destination,
             @Param("date") LocalDate date);
 
+    @Query("SELECT r FROM Ride r WHERE r.status = 'OPEN' AND r.availableSeats > 0 " +
+           "AND r.departureDate >= :today " +
+           "ORDER BY r.departureDate ASC, r.departureTime ASC")
+    List<Ride> findAllAvailable(@Param("today") LocalDate today);
+
     List<Ride> findByDriver_CollegeEmailOrderByCreatedAtDesc(String collegeEmail);
 }

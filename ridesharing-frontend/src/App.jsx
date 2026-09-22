@@ -10,6 +10,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import MyRides from './pages/MyRides';
+import AllRides from './pages/AllRides';
 import CreateRide from './components/rides/CreateRide';
 import SearchRides from './components/rides/SearchRides';
 import RideDetails from './components/rides/RideDetails';
@@ -31,6 +32,7 @@ function AppRoutes() {
       <Route element={<Layout />}>
         <Route path="/" element={<RootRedirect />} />
         <Route path="/rides/search" element={<SearchRides />} />
+        <Route path="/rides/available" element={<ProtectedRoute><AllRides /></ProtectedRoute>} />
         <Route path="/rides/:id" element={<RideDetails />} />
 
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

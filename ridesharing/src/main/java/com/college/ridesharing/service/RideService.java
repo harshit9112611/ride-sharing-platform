@@ -128,6 +128,10 @@ public class RideService {
         );
     }
 
+    public List<Ride> getAllAvailableRides() {
+        return rideRepository.findAllAvailable(LocalDate.now());
+    }
+
     public List<Ride> getMyRides(String driverEmail) {
 
         return rideRepository

@@ -8,6 +8,7 @@ import ThemeToggle from './ThemeToggle';
 const navLinks = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/rides/search', label: 'Find Rides' },
+  { to: '/rides/available', label: 'All Rides' },
   { to: '/rides/create', label: 'Post Ride' },
   { to: '/my-rides', label: 'My Rides' },
 ];

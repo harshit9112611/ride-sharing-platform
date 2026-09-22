@@ -52,6 +52,11 @@ public class RideController {
         return ResponseEntity.ok(rides);
     }
 
+    @GetMapping("/available")
+    public ResponseEntity<List<Ride>> getAllAvailable() {
+        return ResponseEntity.ok(rideService.getAllAvailableRides());
+    }
+
     @GetMapping("/my")
     public ResponseEntity<List<Ride>> getMyRides(Authentication authentication) {
         List<Ride> rides = rideService.getMyRides(authentication.getName());
